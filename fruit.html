@@ -287,6 +287,56 @@
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
         }
         
+        .missed-counter {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            color: #ff6b8b;
+            font-size: 14px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #ff6b8b;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            font-weight: bold;
+        }
+        
+        .score1000-badge {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #ff6b8b, #ff4d6d);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            display: none;
+            z-index: 5;
+            box-shadow: 0 5px 20px rgba(255, 107, 139, 0.5);
+            animation: glow 1s infinite alternate;
+            white-space: nowrap;
+        }
+        
+        .score1000-timer {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            color: #ff6b8b;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            display: none;
+            z-index: 5;
+            border: 2px solid #ff6b8b;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+        }
+        
         .start-container {
             position: absolute;
             bottom: 20px;
@@ -324,7 +374,7 @@
             z-index: 5;
         }
         
-        /* 簡化版技能選擇界面 */
+        /* 技能選擇界面 */
         .skill-selection {
             position: absolute;
             top: 0;
@@ -427,13 +477,23 @@
         .active-skill {
             background-color: rgba(90, 156, 255, 0.9);
             color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
             font-weight: bold;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .active-skill .skill-charge {
+            background-color: white;
+            color: #5a9cff;
+            border-radius: 15px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: 5px;
         }
         
         .bomb-warning {
@@ -452,10 +512,47 @@
             animation: pulse 1s infinite;
         }
         
+        .bomb-immunity-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(90, 156, 255, 0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 10;
+            display: none;
+            animation: pulse 1s infinite;
+        }
+        
+        .combo-break-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 107, 139, 0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 10;
+            display: none;
+            animation: pulse 1s infinite;
+        }
+        
         @keyframes pulse {
             0% { transform: translate(-50%, -50%) scale(1); }
             50% { transform: translate(-50%, -50%) scale(1.1); }
             100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        @keyframes glow {
+            0% { box-shadow: 0 5px 20px rgba(255, 107, 139, 0.5); }
+            100% { box-shadow: 0 5px 30px rgba(255, 107, 139, 0.8); }
         }
         
         @media (max-width: 768px) {
@@ -483,6 +580,19 @@
             .skill-card {
                 width: 80%;
             }
+            
+            .score1000-badge {
+                font-size: 14px;
+                padding: 8px 16px;
+                white-space: normal;
+                width: 90%;
+            }
+            
+            .score1000-timer {
+                top: 100px;
+                font-size: 14px;
+                white-space: normal;
+            }
         }
     </style>
 </head>
@@ -497,6 +607,10 @@
             
             <div class="time-container" id="timeContainer">時間: 60秒</div>
             <div class="fruit-count" id="fruitCount">水果: 0</div>
+            <div class="missed-counter" id="missedCounter">掉出: 0</div>
+            
+            <div class="score1000-badge" id="score1000Badge">🎉 1000分達成！水果加速10秒！ 🎉</div>
+            <div class="score1000-timer" id="score1000Timer">⏱️ 加速剩餘: 10秒</div>
             
             <div class="start-container">
                 <button class="start-game-btn" id="startGameBtn">開始遊戲</button>
@@ -505,8 +619,10 @@
             <div class="active-skills" id="activeSkills"></div>
             
             <div class="bomb-warning" id="bombWarning">⚠️ 炸彈！扣1000分！ ⚠️</div>
+            <div class="bomb-immunity-effect" id="bombImmunityEffect">🛡️ 炸彈免疫！剩餘次數 🛡️</div>
+            <div class="combo-break-effect" id="comboBreakEffect">💔 連擊中斷！扣分！ 💔</div>
             
-            <!-- 簡化版技能選擇界面 - 只顯示3個隨機技能 -->
+            <!-- 技能選擇界面 - 只顯示3個隨機技能 -->
             <div class="skill-selection" id="skillSelection">
                 <h2 class="skill-title">選擇一個技能開始遊戲</h2>
                 <div class="skills-container" id="skillsContainer">
@@ -538,9 +654,9 @@
                 <p style="margin-top: 10px; color: #666; font-size: 14px; line-height: 1.5;">
                     1. 每個水果+10分<br>
                     2. 炸彈扣1000分 (分數≥60分出現)<br>
-                    3. 切到炸彈不影響連擊<br>
-                    4. 60秒時間限制<br>
-                    5. 開始前選擇一個技能
+                    3. 連擊規則：只要不扣分就算連擊！<br>
+                    4. 炸彈免疫技能可擋3次<br>
+                    5. 1000分獎勵：10秒加速模式
                 </p>
             </div>
         </div>
@@ -554,16 +670,16 @@
                 <p>切中一個水果加10分，錯過一個水果扣5分。分數變為負數時遊戲立即結束。</p>
             </div>
             <div class="rule-item">
-                <h4>炸彈系統</h4>
-                <p>當分數達到60分以上時會出現黑色炸彈。切割炸彈會扣除1000分！請務必小心避開！</p>
-            </div>
-            <div class="rule-item">
                 <h4>連擊系統</h4>
-                <p>連續切割水果會增加連擊倍數，切到炸彈不會中斷連擊。水果尺寸變大更容易切割。</p>
+                <p>只要不扣分，就算連擊！切水果、炸彈免疫時都會增加連擊。扣分時（水果掉出、切到炸彈）連擊重置。</p>
             </div>
             <div class="rule-item">
-                <h4>技能系統</h4>
-                <p>開始前從3個隨機技能中選擇1個。技能會帶來各種加成效果。</p>
+                <h4>1000分獎勵</h4>
+                <p>當分數首次達到1000分時，會啟動10秒加速模式！期間每1秒自動生成一個額外水果！</p>
+            </div>
+            <div class="rule-item">
+                <h4>炸彈免疫技能</h4>
+                <p>選擇炸彈免疫技能後，可以抵擋3次炸彈攻擊，使用後次數會減少。免疫時不會扣分，連擊繼續！</p>
             </div>
         </div>
     </div>
@@ -575,6 +691,7 @@
         let scoreElement = document.getElementById('score');
         let timeElement = document.getElementById('timeContainer');
         let fruitCountElement = document.getElementById('fruitCount');
+        let missedCounterElement = document.getElementById('missedCounter');
         let comboElement = document.getElementById('combo');
         let startGameBtn = document.getElementById('startGameBtn');
         let gameOverScreen = document.getElementById('gameOverScreen');
@@ -585,6 +702,10 @@
         let skillsContainer = document.getElementById('skillsContainer');
         let selectSkillBtn = document.getElementById('selectSkillBtn');
         let bombWarning = document.getElementById('bombWarning');
+        let bombImmunityEffect = document.getElementById('bombImmunityEffect');
+        let comboBreakEffect = document.getElementById('comboBreakEffect');
+        let score1000Badge = document.getElementById('score1000Badge');
+        let score1000Timer = document.getElementById('score1000Timer');
         let activeSkillsElement = document.getElementById('activeSkills');
         
         // 設置畫布大小
@@ -600,6 +721,7 @@
         let game = {
             score: 0,
             timeLeft: 60,
+            originalTimeLeft: 60, // 記錄原始時間（用於難度計算）
             isRunning: false,
             fruits: [],
             bombs: [],
@@ -613,9 +735,17 @@
             lastFruitTime: 0,
             lastBombTime: 0,
             bombInterval: 5000,
+            bonusFruitInterval: 1000,
+            lastBonusFruitTime: 0,
+            score1000Reached: false,
+            bonusModeActive: false,
+            bonusTimeLeft: 0,
+            bonusTimerId: null,
+            bonusFruitTimerId: null,
             animationId: null,
             timerId: null,
             selectedSkill: null,
+            bombImmunityCharges: 0,
             consecutiveCuts: 0,
             maxConsecutiveCuts: 0
         };
@@ -633,7 +763,7 @@
                 id: 2,
                 name: "時間延長",
                 icon: "⏱️",
-                description: "遊戲時間增加15秒",
+                description: "遊戲時間增加15秒（正常生成水果）",
                 effect: "extraTime"
             },
             {
@@ -647,7 +777,7 @@
                 id: 4,
                 name: "炸彈免疫",
                 icon: "🛡️",
-                description: "切割炸彈不會扣分",
+                description: "抵擋3次炸彈攻擊 (使用後次數減少)",
                 effect: "bombImmunity"
             },
             {
@@ -675,13 +805,13 @@
             '#AF52DE'  // 紫色
         ];
         
-        // 水果類型 - 移除所有特殊功能，只有基本水果
+        // 水果類型
         const fruitTypes = [
             { 
                 name: '西瓜', 
                 color: '#4CD964', 
                 points: 10,
-                radius: 40  // 更大的水果
+                radius: 40
             },
             { 
                 name: '草莓', 
@@ -709,18 +839,16 @@
             }
         ];
         
-        // 水果類 - 移除所有特殊功能
+        // 水果類
         class Fruit {
             constructor(type) {
                 this.type = type || fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
-                this.radius = this.type.radius + Math.random() * 5; // 更大的水果
+                this.radius = this.type.radius + Math.random() * 5;
                 this.x = this.radius + Math.random() * (canvas.width - 2 * this.radius);
                 this.y = canvas.height + this.radius;
                 
                 const targetHeight = NINTH_ROW_HEIGHT;
                 const gravity = 0.25;
-                
-                // 使用物理公式計算需要的初速度
                 const requiredSpeed = Math.sqrt(2 * gravity * (canvas.height - targetHeight));
                 
                 this.speedX = (Math.random() - 0.5) * 3;
@@ -741,7 +869,6 @@
                     this.speedY += this.gravity;
                     this.rotation += this.rotationSpeed;
                     
-                    // 邊界反彈
                     if (this.x < this.radius || this.x > canvas.width - this.radius) {
                         this.speedX *= -0.8;
                         this.x = this.x < this.radius ? this.radius : canvas.width - this.radius;
@@ -750,7 +877,7 @@
                     this.slicedTime++;
                 }
                 
-                // 如果水果掉出屏幕且沒有被切割，扣分
+                // 如果水果掉出屏幕且沒有被切割 → 扣分 → 連擊重置
                 if (!this.isSliced && this.y > canvas.height + this.radius && !this.hasScored) {
                     this.hasScored = true;
                     
@@ -758,9 +885,10 @@
                     scoreElement.textContent = game.score;
                     
                     game.missedFruits++;
-                    game.combo = 1;
-                    comboElement.textContent = 'x1';
-                    game.consecutiveCuts = 0;
+                    missedCounterElement.textContent = `掉出: ${game.missedFruits}`;
+                    
+                    // 扣分 → 連擊重置
+                    resetCombo(true);
                     
                     // 檢查是否負分
                     if (game.score < 0 && game.isRunning) {
@@ -777,25 +905,21 @@
                 ctx.rotate(this.rotation);
                 
                 if (!this.isSliced) {
-                    // 繪製水果主體
                     ctx.fillStyle = this.color;
                     ctx.beginPath();
                     ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // 水果高光
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                     ctx.beginPath();
                     ctx.arc(-this.radius * 0.3, -this.radius * 0.3, this.radius * 0.4, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // 水果葉子
                     ctx.fillStyle = '#4CD964';
                     ctx.beginPath();
                     ctx.ellipse(0, -this.radius * 0.8, this.radius * 0.6, this.radius * 0.3, 0, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // 水果陰影
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
                     ctx.shadowBlur = 8;
                     ctx.shadowOffsetY = 3;
@@ -803,30 +927,25 @@
                     ctx.shadowBlur = 0;
                     ctx.shadowOffsetY = 0;
                     
-                    // 水果名稱
                     ctx.fillStyle = '#333';
                     ctx.font = `bold ${Math.floor(this.radius/4)}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(this.type.name, 0, this.radius + 10);
                 } else {
-                    // 繪製切割後的水果
                     const sliceAngle = Math.PI / 4;
                     
-                    // 左半部分
                     ctx.fillStyle = this.color;
                     ctx.beginPath();
                     ctx.arc(-this.radius * 0.3, 0, this.radius, sliceAngle, Math.PI * 2 - sliceAngle);
                     ctx.closePath();
                     ctx.fill();
                     
-                    // 右半部分
                     ctx.beginPath();
                     ctx.arc(this.radius * 0.3, 0, this.radius, Math.PI + sliceAngle, Math.PI * 3 - sliceAngle);
                     ctx.closePath();
                     ctx.fill();
                     
-                    // 果汁飛濺
                     for (let i = 0; i < 8; i++) {
                         const angle = Math.random() * Math.PI * 2;
                         const distance = Math.random() * this.radius * 1.5;
@@ -849,52 +968,26 @@
                     this.isSliced = true;
                     this.hasScored = true;
                     
-                    // 計算基礎分數
                     let points = this.type.points * game.combo;
                     
-                    // 檢查是否有"雙倍分數"技能
                     if (game.selectedSkill && game.selectedSkill.effect === "doubleScore") {
                         points *= 2;
                     }
                     
-                    // 檢查是否有"幸運切割"技能
                     if (game.selectedSkill && game.selectedSkill.effect === "luckyCut" && Math.random() < 0.15) {
                         points *= 3;
                     }
                     
+                    const oldScore = game.score;
                     game.score += points;
                     scoreElement.textContent = game.score;
                     
-                    // 增加連擊和連續切割計數
-                    const currentTime = Date.now();
-                    if (currentTime - game.lastCutTime < 1000) {
-                        game.combo = Math.min(10, game.combo + 1);
-                        game.consecutiveCuts++;
-                        
-                        // 檢查是否觸發"連擊大師"效果
-                        if (game.consecutiveCuts >= 8) {
-                            if (game.selectedSkill && game.selectedSkill.effect === "comboMaster") {
-                                triggerComboMaster();
-                            }
-                        }
-                    } else {
-                        game.combo = 1;
-                        game.consecutiveCuts = 1;
+                    if (oldScore < 1000 && game.score >= 1000 && !game.score1000Reached) {
+                        activateScore1000Bonus();
                     }
                     
-                    game.lastCutTime = currentTime;
-                    
-                    comboElement.textContent = `x${game.combo}`;
-                    
-                    // 重置連擊計時器
-                    if (game.comboTimeout) clearTimeout(game.comboTimeout);
-                    
-                    const comboDuration = (game.selectedSkill && game.selectedSkill.effect === "longerCombo") ? 3000 : 1500;
-                    game.comboTimeout = setTimeout(() => {
-                        game.combo = 1;
-                        comboElement.textContent = 'x1';
-                        game.consecutiveCuts = 0;
-                    }, comboDuration);
+                    // 切到水果 → 加分 → 連擊增加
+                    increaseCombo();
                     
                     return true;
                 }
@@ -905,7 +998,7 @@
         // 炸彈類
         class Bomb {
             constructor() {
-                this.radius = 35; // 更大的炸彈
+                this.radius = 35;
                 this.x = this.radius + Math.random() * (canvas.width - 2 * this.radius);
                 this.y = canvas.height + this.radius;
                 
@@ -930,7 +1023,6 @@
                     this.speedY += this.gravity;
                     this.rotation += this.rotationSpeed;
                     
-                    // 邊界反彈
                     if (this.x < this.radius || this.x > canvas.width - this.radius) {
                         this.speedX *= -0.8;
                         this.x = this.x < this.radius ? this.radius : canvas.width - this.radius;
@@ -948,17 +1040,14 @@
                 ctx.rotate(this.rotation);
                 
                 if (!this.isExploded) {
-                    // 繪製炸彈主體
                     ctx.fillStyle = this.color;
                     ctx.beginPath();
                     ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // 炸彈引信
                     ctx.fillStyle = '#8B4513';
                     ctx.fillRect(-4, -this.radius - 8, 8, 15);
                     
-                    // 炸彈警告標誌
                     ctx.fillStyle = '#FF0000';
                     ctx.beginPath();
                     ctx.moveTo(0, -this.radius * 0.5);
@@ -967,14 +1056,12 @@
                     ctx.closePath();
                     ctx.fill();
                     
-                    // 炸彈文字
                     ctx.fillStyle = '#FFFFFF';
                     ctx.font = 'bold 18px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText('-1000', 0, 0);
                     
-                    // 炸彈陰影
                     ctx.shadowColor = 'rgba(255, 0, 0, 0.5)';
                     ctx.shadowBlur = 15;
                     ctx.shadowOffsetY = 3;
@@ -982,7 +1069,6 @@
                     ctx.shadowBlur = 0;
                     ctx.shadowOffsetY = 0;
                 } else {
-                    // 繪製爆炸效果
                     ctx.fillStyle = '#FF9500';
                     for (let i = 0; i < 12; i++) {
                         const angle = (i * Math.PI * 2) / 12;
@@ -1009,27 +1095,40 @@
                 if (!this.isExploded) {
                     this.isExploded = true;
                     
-                    // 檢查是否有"炸彈免疫"技能
-                    const hasBombImmunity = game.selectedSkill && game.selectedSkill.effect === "bombImmunity";
-                    
-                    if (!hasBombImmunity) {
-                        // 炸彈扣1000分！
-                        game.score -= 1000;
-                        scoreElement.textContent = game.score;
+                    if (game.bombImmunityCharges > 0) {
+                        // 有免疫 → 不扣分 → 連擊增加
+                        game.bombImmunityCharges--;
                         
-                        // 顯示警告
-                        bombWarning.style.display = 'block';
+                        bombImmunityEffect.innerHTML = `🛡️ 炸彈免疫！剩餘 ${game.bombImmunityCharges}/3 次 🛡️`;
+                        bombImmunityEffect.style.display = 'block';
                         setTimeout(() => {
-                            bombWarning.style.display = 'none';
-                        }, 2000);
+                            bombImmunityEffect.style.display = 'none';
+                        }, 1500);
                         
-                        // 檢查是否負分
-                        if (game.score < 0 && game.isRunning) {
-                            endGame(false);
-                        }
+                        updateActiveSkillsDisplay();
+                        
+                        // 免疫成功 → 不扣分 → 連擊增加
+                        increaseCombo();
+                        
+                        return true;
                     }
                     
-                    // 切到炸彈不會重置連擊！
+                    // 沒有免疫 → 扣1000分 → 連擊重置
+                    const oldScore = game.score;
+                    game.score -= 1000;
+                    scoreElement.textContent = game.score;
+                    
+                    bombWarning.style.display = 'block';
+                    setTimeout(() => {
+                        bombWarning.style.display = 'none';
+                    }, 2000);
+                    
+                    // 扣分 → 連擊重置
+                    resetCombo(true);
+                    
+                    if (game.score < 0 && game.isRunning) {
+                        endGame(false);
+                    }
                     
                     return true;
                 }
@@ -1037,24 +1136,137 @@
             }
         }
         
+        // 增加連擊的函數
+        function increaseCombo() {
+            const currentTime = Date.now();
+            
+            // 如果在連擊時間範圍內，增加連擊
+            if (currentTime - game.lastCutTime < 1000) {
+                game.combo = Math.min(10, game.combo + 1);
+                game.consecutiveCuts++;
+                
+                if (game.consecutiveCuts >= 8) {
+                    if (game.selectedSkill && game.selectedSkill.effect === "comboMaster") {
+                        triggerComboMaster();
+                    }
+                }
+            } else {
+                game.combo = 1;
+                game.consecutiveCuts = 1;
+            }
+            
+            game.lastCutTime = currentTime;
+            
+            comboElement.textContent = `x${game.combo}`;
+            
+            if (game.comboTimeout) clearTimeout(game.comboTimeout);
+            
+            const comboDuration = (game.selectedSkill && game.selectedSkill.effect === "longerCombo") ? 3000 : 1500;
+            game.comboTimeout = setTimeout(() => {
+                game.combo = 1;
+                comboElement.textContent = 'x1';
+                game.consecutiveCuts = 0;
+            }, comboDuration);
+        }
+        
+        // 重置連擊的函數（當扣分時呼叫）
+        function resetCombo(showEffect) {
+            game.combo = 1;
+            game.consecutiveCuts = 0;
+            comboElement.textContent = 'x1';
+            
+            if (game.comboTimeout) {
+                clearTimeout(game.comboTimeout);
+            }
+            
+            if (showEffect) {
+                comboBreakEffect.style.display = 'block';
+                setTimeout(() => {
+                    comboBreakEffect.style.display = 'none';
+                }, 1000);
+            }
+        }
+        
+        // 觸發1000分獎勵
+        function activateScore1000Bonus() {
+            game.score1000Reached = true;
+            game.bonusModeActive = true;
+            game.bonusTimeLeft = 10;
+            
+            score1000Badge.style.display = 'block';
+            score1000Timer.style.display = 'block';
+            score1000Timer.innerHTML = `⏱️ 加速剩餘: 10秒`;
+            
+            if (game.isRunning) {
+                game.fruits.push(new Fruit());
+                fruitCountElement.textContent = `水果: ${game.fruits.length}`;
+            }
+            
+            if (game.bonusFruitTimerId) {
+                clearInterval(game.bonusFruitTimerId);
+            }
+            
+            game.bonusFruitTimerId = setInterval(() => {
+                if (game.isRunning && game.bonusModeActive) {
+                    game.fruits.push(new Fruit());
+                    fruitCountElement.textContent = `水果: ${game.fruits.length}`;
+                }
+            }, game.bonusFruitInterval);
+            
+            if (game.bonusTimerId) {
+                clearInterval(game.bonusTimerId);
+            }
+            
+            game.bonusTimerId = setInterval(() => {
+                if (game.isRunning && game.bonusModeActive) {
+                    game.bonusTimeLeft--;
+                    score1000Timer.innerHTML = `⏱️ 加速剩餘: ${game.bonusTimeLeft}秒`;
+                    
+                    if (game.bonusTimeLeft <= 0) {
+                        endScore1000Bonus();
+                    }
+                }
+            }, 1000);
+        }
+        
+        // 結束1000分獎勵
+        function endScore1000Bonus() {
+            game.bonusModeActive = false;
+            
+            if (game.bonusTimerId) {
+                clearInterval(game.bonusTimerId);
+                game.bonusTimerId = null;
+            }
+            
+            if (game.bonusFruitTimerId) {
+                clearInterval(game.bonusFruitTimerId);
+                game.bonusFruitTimerId = null;
+            }
+            
+            score1000Badge.style.display = 'none';
+            score1000Timer.style.display = 'none';
+        }
+        
         // 觸發連擊大師效果
         function triggerComboMaster() {
-            // 清除屏幕上所有水果
             for (let i = game.fruits.length - 1; i >= 0; i--) {
                 const fruit = game.fruits[i];
                 if (!fruit.isSliced) {
                     fruit.isSliced = true;
                     fruit.hasScored = true;
+                    const oldScore = game.score;
                     game.score += fruit.type.points * 2;
                     scoreElement.textContent = game.score;
+                    
+                    if (oldScore < 1000 && game.score >= 1000 && !game.score1000Reached) {
+                        activateScore1000Bonus();
+                    }
                 }
             }
             
-            // 添加爆炸效果
             for (let i = 0; i < 20; i++) {
                 const x = Math.random() * canvas.width;
                 const y = Math.random() * canvas.height;
-                const size = Math.random() * 20 + 10;
                 
                 game.cutLines.push({
                     x1: x,
@@ -1066,7 +1278,6 @@
                 });
             }
             
-            // 重置連續切割計數
             game.consecutiveCuts = 0;
         }
         
@@ -1075,7 +1286,6 @@
             ctx.strokeStyle = '#f0f0f0';
             ctx.lineWidth = 1;
             
-            // 繪製網格線
             for (let x = 0; x <= canvas.width; x += canvas.width / 12) {
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
@@ -1090,7 +1300,6 @@
                 ctx.stroke();
             }
             
-            // 標記第9格（從底部數）
             ctx.fillStyle = 'rgba(255, 107, 139, 0.1)';
             const ninthRowY = canvas.height - (gridHeight * 9);
             ctx.fillRect(0, ninthRowY, canvas.width, gridHeight);
@@ -1098,13 +1307,10 @@
         
         // 顯示技能選擇界面
         function showSkillSelection() {
-            // 清空技能容器
             skillsContainer.innerHTML = '';
             
-            // 隨機選擇3個技能
             const shuffledSkills = [...allSkills].sort(() => Math.random() - 0.5).slice(0, 3);
             
-            // 創建技能卡片
             shuffledSkills.forEach(skill => {
                 const skillCard = document.createElement('div');
                 skillCard.className = 'skill-card';
@@ -1117,25 +1323,18 @@
                 `;
                 
                 skillCard.addEventListener('click', () => {
-                    // 移除所有卡片的選擇狀態
                     document.querySelectorAll('.skill-card').forEach(card => {
                         card.classList.remove('selected');
                     });
                     
-                    // 設置當前卡片為選擇狀態
                     skillCard.classList.add('selected');
-                    
-                    // 設置選擇的技能
                     game.selectedSkill = skill;
-                    
-                    // 更新按鈕文字
                     selectSkillBtn.textContent = `開始遊戲`;
                 });
                 
                 skillsContainer.appendChild(skillCard);
             });
             
-            // 顯示技能選擇界面
             skillSelection.style.display = 'flex';
             selectSkillBtn.textContent = `請選擇一個技能`;
         }
@@ -1147,7 +1346,14 @@
             if (game.selectedSkill) {
                 const skillEl = document.createElement('div');
                 skillEl.className = 'active-skill';
-                skillEl.innerHTML = `${game.selectedSkill.icon} ${game.selectedSkill.name}`;
+                
+                if (game.selectedSkill.effect === "bombImmunity") {
+                    skillEl.innerHTML = `${game.selectedSkill.icon} ${game.selectedSkill.name} 
+                        <span class="skill-charge">${game.bombImmunityCharges}/3</span>`;
+                } else {
+                    skillEl.innerHTML = `${game.selectedSkill.icon} ${game.selectedSkill.name}`;
+                }
+                
                 activeSkillsElement.appendChild(skillEl);
             }
         }
@@ -1156,6 +1362,7 @@
         function initGame() {
             game.score = 0;
             game.timeLeft = 60;
+            game.originalTimeLeft = 60; // 重置原始時間
             game.isRunning = false;
             game.fruits = [];
             game.bombs = [];
@@ -1165,24 +1372,34 @@
             game.fruitInterval = 2000;
             game.lastFruitTime = 0;
             game.lastBombTime = 0;
+            game.bonusFruitInterval = 1000;
+            game.lastBonusFruitTime = 0;
+            game.score1000Reached = false;
+            game.bonusModeActive = false;
+            game.bonusTimeLeft = 0;
             game.selectedSkill = null;
+            game.bombImmunityCharges = 0;
             game.consecutiveCuts = 0;
             game.maxConsecutiveCuts = 0;
             
             scoreElement.textContent = '0';
             timeElement.textContent = '時間: 60秒';
             fruitCountElement.textContent = '水果: 0';
+            missedCounterElement.textContent = '掉出: 0';
             comboElement.textContent = 'x1';
             gameOverScreen.style.display = 'none';
             skillSelection.style.display = 'none';
             startGameBtn.textContent = '開始遊戲';
             startGameBtn.disabled = false;
+            score1000Badge.style.display = 'none';
+            score1000Timer.style.display = 'none';
             
             if (game.animationId) cancelAnimationFrame(game.animationId);
             if (game.timerId) clearInterval(game.timerId);
+            if (game.bonusTimerId) clearInterval(game.bonusTimerId);
+            if (game.bonusFruitTimerId) clearInterval(game.bonusFruitTimerId);
             if (game.comboTimeout) clearTimeout(game.comboTimeout);
             
-            // 清空活動技能顯示
             activeSkillsElement.innerHTML = '';
         }
         
@@ -1190,13 +1407,11 @@
         function startGame() {
             if (game.isRunning) return;
             
-            // 如果還沒有選擇技能，顯示技能選擇界面
             if (!game.selectedSkill) {
                 showSkillSelection();
                 return;
             }
             
-            // 應用技能效果
             applySkillEffects();
             
             game.isRunning = true;
@@ -1204,16 +1419,16 @@
             startGameBtn.textContent = '遊戲中...';
             startGameBtn.disabled = true;
             
-            // 更新活動技能顯示
             updateActiveSkillsDisplay();
             
             game.timerId = setInterval(() => {
                 game.timeLeft--;
                 timeElement.textContent = `時間: ${game.timeLeft}秒`;
                 
-                // 隨時間增加水果生成頻率
+                // 使用原始時間來計算難度（確保時間延長後難度不會突然暴增）
+                const elapsedTime = 60 - game.originalTimeLeft;
                 if (game.fruitInterval > game.minInterval) {
-                    game.fruitInterval = Math.max(game.minInterval, 2000 - (60 - game.timeLeft) * 25);
+                    game.fruitInterval = Math.max(game.minInterval, 2000 - elapsedTime * 25);
                 }
                 
                 if (game.timeLeft <= 0) {
@@ -1221,23 +1436,33 @@
                 }
             }, 1000);
             
+            game.lastFruitTime = Date.now();
+            
             gameLoop();
         }
         
         // 應用技能效果
         function applySkillEffects() {
-            // 檢查"時間延長"技能
-            const hasExtraTime = game.selectedSkill && game.selectedSkill.effect === "extraTime";
-            if (hasExtraTime) {
+            if (game.selectedSkill && game.selectedSkill.effect === "extraTime") {
                 game.timeLeft += 15;
                 timeElement.textContent = `時間: ${game.timeLeft}秒`;
+                // 不修改 originalTimeLeft，讓難度計算使用原始的60秒
+            }
+            
+            if (game.selectedSkill && game.selectedSkill.effect === "bombImmunity") {
+                game.bombImmunityCharges = 3;
             }
         }
         
         // 結束遊戲
         function endGame(isTimeUp) {
             game.isRunning = false;
+            game.score1000Reached = false;
+            game.bonusModeActive = false;
+            
             clearInterval(game.timerId);
+            clearInterval(game.bonusTimerId);
+            clearInterval(game.bonusFruitTimerId);
             cancelAnimationFrame(game.animationId);
             
             finalScoreElement.textContent = game.score;
@@ -1256,21 +1481,21 @@
             gameOverScreen.style.display = 'flex';
             startGameBtn.textContent = '開始遊戲';
             startGameBtn.disabled = false;
+            score1000Badge.style.display = 'none';
+            score1000Timer.style.display = 'none';
         }
         
         // 遊戲主循環
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 繪製網格背景
             drawGridBackground();
             
-            // 生成新水果
             if (game.isRunning) {
                 const currentTime = Date.now();
                 if (currentTime - game.lastFruitTime > game.fruitInterval) {
-                    // 初始階段生成1-2個水果，後期逐漸增加
-                    const baseCount = Math.floor((60 - game.timeLeft) / 20) + 1;
+                    // 使用原始時間來計算水果數量（確保時間延長後不會一次出太多水果）
+                    const baseCount = Math.floor((60 - game.originalTimeLeft) / 20) + 1;
                     const fruitCount = Math.min(4, baseCount);
                     
                     for (let i = 0; i < fruitCount; i++) {
@@ -1285,14 +1510,12 @@
                     game.lastFruitTime = currentTime;
                 }
                 
-                // 生成炸彈（當分數達到60分以上時）
                 if (game.score >= 60 && currentTime - game.lastBombTime > game.bombInterval) {
                     game.bombs.push(new Bomb());
                     game.lastBombTime = currentTime;
                 }
             }
             
-            // 更新和繪製水果
             for (let i = game.fruits.length - 1; i >= 0; i--) {
                 const fruit = game.fruits[i];
                 const shouldRemove = fruit.update();
@@ -1305,7 +1528,6 @@
                 }
             }
             
-            // 更新和繪製炸彈
             for (let i = game.bombs.length - 1; i >= 0; i--) {
                 const bomb = game.bombs[i];
                 const shouldRemove = bomb.update();
@@ -1317,7 +1539,6 @@
                 }
             }
             
-            // 更新和繪製切割線
             for (let i = game.cutLines.length - 1; i >= 0; i--) {
                 const line = game.cutLines[i];
                 line.life--;
@@ -1359,7 +1580,6 @@
             
             let slicedAny = false;
             
-            // 檢查是否切割到水果
             for (let i = 0; i < game.fruits.length; i++) {
                 const fruit = game.fruits[i];
                 
@@ -1367,7 +1587,6 @@
                     if (fruit.slice()) {
                         slicedAny = true;
                         
-                        // 檢查分數是否變負
                         if (game.score < 0) {
                             endGame(false);
                             return;
@@ -1376,16 +1595,17 @@
                 }
             }
             
-            // 檢查是否切割到炸彈
             for (let i = 0; i < game.bombs.length; i++) {
                 const bomb = game.bombs[i];
                 
                 if (lineIntersectsCircle(x1, y1, x2, y2, bomb.x, bomb.y, bomb.radius)) {
                     if (bomb.explode()) {
                         slicedAny = true;
-                        // 不重置連擊
                         
-                        // 檢查分數是否變負
+                        if (game.selectedSkill && game.selectedSkill.effect === "bombImmunity") {
+                            updateActiveSkillsDisplay();
+                        }
+                        
                         if (game.score < 0) {
                             endGame(false);
                             return;
@@ -1394,7 +1614,6 @@
                 }
             }
             
-            // 添加切割線效果
             if (slicedAny || Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) > 10) {
                 const colorIndex = Math.floor(Math.random() * colors.length);
                 game.cutLines.push({
@@ -1410,7 +1629,6 @@
         
         // 檢查線段與圓是否相交
         function lineIntersectsCircle(x1, y1, x2, y2, cx, cy, r) {
-            // 簡化檢查：檢查線段中點到圓心的距離
             const mx = (x1 + x2) / 2;
             const my = (y1 + y2) / 2;
             const distance = Math.sqrt((mx - cx) ** 2 + (my - cy) ** 2);
@@ -1440,7 +1658,6 @@
             showSkillSelection();
         });
         
-        // 鼠標事件
         let isMouseDown = false;
         let lastMouseX = 0;
         let lastMouseY = 0;
@@ -1469,7 +1686,6 @@
             isMouseDown = false;
         });
         
-        // 觸摸事件
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
@@ -1498,19 +1714,15 @@
             isMouseDown = false;
         });
         
-        // 窗口大小調整
         window.addEventListener('resize', () => {
             canvas.width = canvas.offsetWidth;
             canvas.height = canvas.offsetHeight;
-            // 重新計算第9格高度
             gridHeight = canvas.height / GRID_ROWS;
             NINTH_ROW_HEIGHT = gridHeight * 3;
         });
         
-        // 初始化遊戲
         initGame();
         
-        // 繪製初始畫面
         drawGridBackground();
         ctx.fillStyle = '#ff6b8b';
         ctx.font = '28px Arial Rounded MT Bold';
