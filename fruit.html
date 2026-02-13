@@ -1,1544 +1,1524 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>切水果游戏 - 高级版</title>
+    <title>切吧水果</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
-            user-select: none;
         }
         
         body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(to bottom, #1a1a2e, #16213e, #0f3460);
-            color: #fff;
-            overflow: hidden;
+            align-items: center;
             padding: 20px;
+            color: #333;
         }
         
         .header {
-            text-align: center;
-            margin-bottom: 20px;
-            z-index: 10;
             width: 100%;
             max-width: 900px;
-        }
-        
-        h1 {
-            font-size: 3.2rem;
-            background: linear-gradient(to right, #ff9966, #ff5e62, #00cc66, #3399ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(255, 94, 98, 0.5);
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-        }
-        
-        .subtitle {
-            color: #a0e7ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             margin-bottom: 20px;
-            font-size: 1.2rem;
+            padding: 0 10px;
         }
         
-        .game-container {
+        .game-title {
+            color: #ff6b8b;
+            font-size: 48px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .main-container {
+            display: flex;
+            width: 100%;
+            max-width: 900px;
+            gap: 20px;
+        }
+        
+        .game-area {
+            flex: 3;
             position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            background-color: #ffffff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 2px solid #eaeaea;
+        }
+        
+        #gameCanvas {
+            width: 100%;
+            height: 500px;
+            display: block;
+            background-color: #ffffff;
+        }
+        
+        .side-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .score-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #eaeaea;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .score-title {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .score {
+            color: #ff6b8b;
+            font-size: 48px;
+            font-weight: bold;
+        }
+        
+        .combo-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #eaeaea;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .combo-title {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .combo {
+            color: #5a9cff;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .controls-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #eaeaea;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-top: auto;
+        }
+        
+        .start-btn {
+            background: linear-gradient(to bottom, #ff6b8b, #ff4d6d);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(255, 107, 139, 0.2);
+        }
+        
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 107, 139, 0.3);
+        }
+        
+        .start-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .footer {
             width: 100%;
             max-width: 900px;
-            height: 600px;
-            margin-bottom: 20px;
-        }
-        
-        #game-canvas {
-            background-color: rgba(13, 25, 48, 0.9);
+            margin-top: 20px;
+            background-color: #ffffff;
             border-radius: 15px;
-            box-shadow: 0 0 30px rgba(0, 150, 255, 0.4);
-            border: 4px solid #1e6fd9;
-            display: block;
-            width: 100%;
-            height: 100%;
+            padding: 25px;
+            border: 2px solid #eaeaea;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
         }
         
-        .ui-overlay {
+        .rules-title {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            color: #ff6b8b;
+        }
+        
+        .rules-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        
+        .rule-item {
+            flex: 1;
+            min-width: 180px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #5a9cff;
+        }
+        
+        .rule-item h4 {
+            color: #5a9cff;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .rule-item p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .game-over {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            border-radius: 15px;
+        }
+        
+        .game-over h1 {
+            color: #ff4d6d;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .final-score {
+            color: #ff6b8b;
+            font-size: 60px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(to bottom, #5a9cff, #3a7cdf);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(90, 156, 255, 0.2);
+        }
+        
+        .game-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #666;
+            font-size: 14px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .fruit-count {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #666;
+            font-size: 16px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .time-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #666;
+            font-size: 16px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .start-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+        
+        .start-game-btn {
+            background: linear-gradient(to bottom, #ff6b8b, #ff4d6d);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(255, 107, 139, 0.3);
+        }
+        
+        .start-game-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 107, 139, 0.4);
+        }
+        
+        .start-game-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .cut-effect {
+            position: absolute;
             pointer-events: none;
             z-index: 5;
         }
         
-        .stats-bar {
-            display: flex;
-            justify-content: space-between;
-            padding: 20px;
-            font-size: 1.4rem;
-            font-weight: bold;
-        }
-        
-        .score-container, .combo-container, .lives-container, .time-container {
-            background-color: rgba(0, 0, 0, 0.6);
-            padding: 10px 20px;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            min-width: 120px;
-        }
-        
-        .score-value {
-            color: #ffcc00;
-            font-size: 2.2rem;
-            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
-        }
-        
-        .combo-value {
-            color: #ff66cc;
-            font-size: 2rem;
-            text-shadow: 0 0 10px rgba(255, 102, 204, 0.7);
-        }
-        
-        .lives-value {
-            color: #00ff9d;
-            font-size: 2rem;
-            text-shadow: 0 0 10px rgba(0, 255, 157, 0.7);
-        }
-        
-        .time-value {
-            color: #3399ff;
-            font-size: 2rem;
-            text-shadow: 0 0 10px rgba(51, 153, 255, 0.7);
-        }
-        
-        .powerup-indicator {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 15px;
-            background-color: rgba(0, 0, 0, 0.6);
-            padding: 10px 20px;
-            border-radius: 10px;
-        }
-        
-        .powerup-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            box-shadow: 0 0 10px currentColor;
-        }
-        
-        .game-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-            z-index: 10;
-        }
-        
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            min-width: 150px;
-        }
-        
-        .btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        }
-        
-        .btn-start {
-            background: linear-gradient(to right, #00cc66, #00b359);
-            color: white;
-        }
-        
-        .btn-pause {
-            background: linear-gradient(to right, #ff9900, #e68a00);
-            color: white;
-        }
-        
-        .btn-reset {
-            background: linear-gradient(to right, #ff3366, #e62e5c);
-            color: white;
-        }
-        
-        .instructions {
-            background-color: rgba(13, 25, 48, 0.8);
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 30px;
-            max-width: 900px;
-            border: 2px solid #1e6fd9;
-            box-shadow: 0 0 20px rgba(0, 150, 255, 0.3);
-            z-index: 10;
-        }
-        
-        .instructions h3 {
-            color: #ff9966;
-            margin-bottom: 15px;
-            font-size: 1.8rem;
-            text-align: center;
-        }
-        
-        .fruit-types {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .fruit-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100px;
-        }
-        
-        .fruit-demo {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            margin-bottom: 8px;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-        }
-        
-        .fruit-name {
-            font-size: 1rem;
-            color: #a0e7ff;
-            text-align: center;
-        }
-        
-        .fruit-score {
-            font-size: 0.9rem;
-            color: #ffcc00;
-            font-weight: bold;
-        }
-        
-        .game-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 4rem;
-            font-weight: bold;
-            text-align: center;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 10;
-            text-shadow: 0 0 20px currentColor;
-        }
-        
-        .combo-popup {
-            position: absolute;
-            font-size: 3rem;
-            font-weight: bold;
-            color: #ff66cc;
-            text-shadow: 0 0 15px rgba(255, 102, 204, 0.8);
-            pointer-events: none;
-            opacity: 0;
-            z-index: 10;
-            animation: comboFloat 1.5s ease-out;
-        }
-        
-        @keyframes comboFloat {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-100px); opacity: 0; }
-        }
-        
-        .juice-splash {
-            position: absolute;
-            width: 100px;
-            height: 100px;
-            pointer-events: none;
-            opacity: 0.8;
-            z-index: 2;
-        }
-        
-        .slice-trail {
-            position: absolute;
-            height: 6px;
-            border-radius: 3px;
-            background: linear-gradient(to right, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));
-            pointer-events: none;
-            z-index: 3;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-        }
-        
-        .life-lost {
-            animation: lifeLost 0.5s ease;
-        }
-        
-        @keyframes lifeLost {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); background-color: #ff3366; }
-            100% { transform: scale(1); }
-        }
-        
-        .powerup-effect {
+        /* 簡化版技能選擇界面 */
+        .skill-selection {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none;
-            z-index: 4;
-            opacity: 0;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 15;
+            border-radius: 15px;
+        }
+        
+        .skill-title {
+            color: #ff6b8b;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .skills-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            max-width: 90%;
+            margin-bottom: 25px;
+        }
+        
+        .skill-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 15px;
+            width: 150px;
+            text-align: center;
+            border: 2px solid #eaeaea;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .skill-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-color: #5a9cff;
+        }
+        
+        .skill-card.selected {
+            border-color: #ff6b8b;
+            background-color: rgba(255, 107, 139, 0.05);
+            transform: scale(1.05);
+        }
+        
+        .skill-icon {
+            font-size: 30px;
+            margin-bottom: 10px;
+            height: 35px;
+        }
+        
+        .skill-name {
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .skill-desc {
+            color: #666;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+        
+        .select-skill-btn {
+            background: linear-gradient(to bottom, #5a9cff, #3a7cdf);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(90, 156, 255, 0.2);
+        }
+        
+        .active-skills {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 5;
+        }
+        
+        .active-skill {
+            background-color: rgba(90, 156, 255, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .bomb-warning {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 0, 0, 0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 10;
+            display: none;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
         
         @media (max-width: 768px) {
-            .game-container {
-                height: 500px;
+            .main-container {
+                flex-direction: column;
             }
             
-            h1 {
-                font-size: 2.5rem;
+            .game-title {
+                font-size: 36px;
             }
             
-            .stats-bar {
-                font-size: 1.1rem;
-                padding: 15px;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 10px;
+            .score {
+                font-size: 36px;
             }
             
-            .score-value, .combo-value, .lives-value, .time-value {
-                font-size: 1.8rem;
+            .combo {
+                font-size: 24px;
             }
             
-            .btn {
-                padding: 12px 20px;
-                font-size: 1rem;
-                min-width: 120px;
+            .skills-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .skill-card {
+                width: 80%;
             }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>切水果大师</h1>
-        <p class="subtitle">连击！道具！三次机会！你能得多少分？</p>
+        <h1 class="game-title">切吧水果</h1>
     </div>
     
-    <div class="game-container">
-        <canvas id="game-canvas"></canvas>
-        
-        <div class="ui-overlay">
-            <div class="stats-bar">
-                <div class="score-container">
-                    <div>分数</div>
-                    <div class="score-value" id="score">0</div>
-                </div>
-                
-                <div class="combo-container">
-                    <div>连击</div>
-                    <div class="combo-value" id="combo">x1</div>
-                </div>
-                
-                <div class="lives-container">
-                    <div>生命</div>
-                    <div class="lives-value" id="lives">3</div>
-                </div>
-                
-                <div class="time-container">
-                    <div>时间</div>
-                    <div class="time-value" id="time">60</div>
-                </div>
+    <div class="main-container">
+        <div class="game-area">
+            <canvas id="gameCanvas"></canvas>
+            
+            <div class="time-container" id="timeContainer">時間: 60秒</div>
+            <div class="fruit-count" id="fruitCount">水果: 0</div>
+            
+            <div class="start-container">
+                <button class="start-game-btn" id="startGameBtn">開始遊戲</button>
             </div>
             
-            <div class="powerup-indicator" id="powerup-indicator">
-                <!-- 道具图标将动态生成 -->
+            <div class="active-skills" id="activeSkills"></div>
+            
+            <div class="bomb-warning" id="bombWarning">⚠️ 炸彈！扣1000分！ ⚠️</div>
+            
+            <!-- 簡化版技能選擇界面 - 只顯示3個隨機技能 -->
+            <div class="skill-selection" id="skillSelection">
+                <h2 class="skill-title">選擇一個技能開始遊戲</h2>
+                <div class="skills-container" id="skillsContainer">
+                    <!-- 只顯示3個隨機技能卡片 -->
+                </div>
+                <button class="select-skill-btn" id="selectSkillBtn">開始遊戲</button>
+            </div>
+            
+            <div class="game-over" id="gameOverScreen">
+                <h1 id="gameOverTitle">遊戲結束</h1>
+                <div class="final-score" id="finalScore">0</div>
+                <button class="restart-btn" id="restartBtn">重新開始</button>
             </div>
         </div>
         
-        <div class="game-message" id="game-message"></div>
-    </div>
-    
-    <div class="game-buttons">
-        <button class="btn btn-start" id="start-btn">开始游戏</button>
-        <button class="btn btn-pause" id="pause-btn">暂停</button>
-        <button class="btn btn-reset" id="reset-btn">重新开始</button>
-    </div>
-    
-    <div class="instructions">
-        <h3>游戏说明</h3>
-        
-        <div class="fruit-types">
-            <div class="fruit-item">
-                <div class="fruit-demo" style="background: radial-gradient(circle at 30% 30%, #ff9966, #ff5e62);">10</div>
-                <div class="fruit-name">西瓜</div>
-                <div class="fruit-score">+10分</div>
+        <div class="side-panel">
+            <div class="score-container">
+                <div class="score-title">分數</div>
+                <div class="score" id="score">0</div>
             </div>
-            <div class="fruit-item">
-                <div class="fruit-demo" style="background: radial-gradient(circle at 30% 30%, #ffcc00, #ff9900);">15</div>
-                <div class="fruit-name">橙子</div>
-                <div class="fruit-score">+15分</div>
+            
+            <div class="combo-container">
+                <div class="combo-title">連擊</div>
+                <div class="combo" id="combo">x1</div>
             </div>
-            <div class="fruit-item">
-                <div class="fruit-demo" style="background: radial-gradient(circle at 30% 30%, #ff66cc, #ff3399);">20</div>
-                <div class="fruit-name">草莓</div>
-                <div class="fruit-score">+20分</div>
-            </div>
-            <div class="fruit-item">
-                <div class="fruit-demo" style="background: radial-gradient(circle at 30% 30%, #333333, #000000); color: white;">💣</div>
-                <div class="fruit-name">炸弹</div>
-                <div class="fruit-score">-1生命</div>
-            </div>
-            <div class="fruit-item">
-                <div class="fruit-demo" style="background: radial-gradient(circle at 30% 30%, #3399ff, #1e6fd9); color: white;">❄️</div>
-                <div class="fruit-name">冰冻</div>
-                <div class="fruit-score">冻结时间</div>
-            </div>
-            <div class="fruit-item">
-                <div class="fruit-demo" style="background: radial-gradient(circle at 30% 30%, #ffcc00, #ff9900); color: white;">2×</div>
-                <div class="fruit-name">双倍</div>
-                <div class="fruit-score">分数翻倍</div>
-            </div>
-            <div class="fruit-item">
-                <div class="fruit-demo" style="background: radial-gradient(circle at 30% 30%, #00cc66, #00994d); color: white;">+15s</div>
-                <div class="fruit-name">时间+</div>
-                <div class="fruit-score">增加时间</div>
-            </div>
-            <div class="fruit-item">
-                <div class="fruit-demo" style="background: radial-gradient(circle at 30% 30%, #ff3366, #cc0044); color: white;">💥</div>
-                <div class="fruit-name">全屏爆炸</div>
-                <div class="fruit-score">清除水果</div>
+            
+            <div class="controls-container">
+                <h3>遊戲說明</h3>
+                <p style="margin-top: 10px; color: #666; font-size: 14px; line-height: 1.5;">
+                    1. 每個水果+10分<br>
+                    2. 炸彈扣1000分 (分數≥60分出現)<br>
+                    3. 切到炸彈不影響連擊<br>
+                    4. 60秒時間限制<br>
+                    5. 開始前選擇一個技能
+                </p>
             </div>
         </div>
-        
-        <div style="text-align: center; margin-top: 20px;">
-            <p><strong>游戏规则：</strong></p>
-            <p>1. 切水果得分，切炸弹扣1生命（初始3生命）</p>
-            <p>2. 连续切水果增加连击倍数（最高10倍）</p>
-            <p>3. 切特殊道具获得强力效果</p>
-            <p>4. 游戏速度会随时间逐渐加快</p>
-            <p>5. 生命为0或时间到游戏结束</p>
+    </div>
+    
+    <div class="footer">
+        <h3 class="rules-title">遊戲規則</h3>
+        <div class="rules-list">
+            <div class="rule-item">
+                <h4>計分規則</h4>
+                <p>切中一個水果加10分，錯過一個水果扣5分。分數變為負數時遊戲立即結束。</p>
+            </div>
+            <div class="rule-item">
+                <h4>炸彈系統</h4>
+                <p>當分數達到60分以上時會出現黑色炸彈。切割炸彈會扣除1000分！請務必小心避開！</p>
+            </div>
+            <div class="rule-item">
+                <h4>連擊系統</h4>
+                <p>連續切割水果會增加連擊倍數，切到炸彈不會中斷連擊。水果尺寸變大更容易切割。</p>
+            </div>
+            <div class="rule-item">
+                <h4>技能系統</h4>
+                <p>開始前從3個隨機技能中選擇1個。技能會帶來各種加成效果。</p>
+            </div>
         </div>
     </div>
 
     <script>
-        // 游戏主变量
-        const canvas = document.getElementById('game-canvas');
-        const ctx = canvas.getContext('2d');
+        // 遊戲變量
+        let canvas = document.getElementById('gameCanvas');
+        let ctx = canvas.getContext('2d');
+        let scoreElement = document.getElementById('score');
+        let timeElement = document.getElementById('timeContainer');
+        let fruitCountElement = document.getElementById('fruitCount');
+        let comboElement = document.getElementById('combo');
+        let startGameBtn = document.getElementById('startGameBtn');
+        let gameOverScreen = document.getElementById('gameOverScreen');
+        let gameOverTitle = document.getElementById('gameOverTitle');
+        let finalScoreElement = document.getElementById('finalScore');
+        let restartBtn = document.getElementById('restartBtn');
+        let skillSelection = document.getElementById('skillSelection');
+        let skillsContainer = document.getElementById('skillsContainer');
+        let selectSkillBtn = document.getElementById('selectSkillBtn');
+        let bombWarning = document.getElementById('bombWarning');
+        let activeSkillsElement = document.getElementById('activeSkills');
         
-        // 设置画布尺寸
+        // 設置畫布大小
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
         
-        // 游戏状态
-        let gameRunning = false;
-        let gamePaused = false;
-        let gameOver = false;
-        let score = 0;
-        let combo = 1;
-        let comboTime = 0;
-        let lives = 3;
-        let gameTime = 60; // 游戏时间（秒）
-        let fruits = [];
-        let splashes = [];
-        let trails = [];
-        let powerups = [];
-        let activePowerups = {};
-        let lastTime = 0;
-        let animationId = null;
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-        let gameSpeed = 1.0; // 游戏速度因子（1.0为正常）
-        let fruitSpawnRate = 1000; // 水果生成间隔（毫秒）
-        let bombChance = 0.1; // 炸弹生成概率
-        let gameStartTime = 0;
+        // 計算第9格的高度（將畫布分為12格）
+        const GRID_ROWS = 12;
+        let gridHeight = canvas.height / GRID_ROWS;
+        let NINTH_ROW_HEIGHT = gridHeight * 3;
         
-        // 水果类型配置
-        const fruitTypes = [
-            { name: "西瓜", color1: "#ff9966", color2: "#ff5e62", score: 10, radius: 35, symbol: "10" },
-            { name: "橙子", color1: "#ffcc00", color2: "#ff9900", score: 15, radius: 30, symbol: "15" },
-            { name: "草莓", color1: "#ff66cc", color2: "#ff3399", score: 20, radius: 25, symbol: "20" },
-            { name: "青苹果", color1: "#00cc66", color2: "#00994d", score: 25, radius: 28, symbol: "25" },
-            { name: "葡萄", color1: "#9966ff", color2: "#6600cc", score: 30, radius: 20, symbol: "30" }
-        ];
-        
-        // 炸弹配置
-        const bombType = { 
-            name: "炸弹", 
-            color1: "#333333", 
-            color2: "#000000", 
-            score: 0, 
-            radius: 30, 
-            isBomb: true, 
-            symbol: "💣" 
+        // 遊戲狀態
+        let game = {
+            score: 0,
+            timeLeft: 60,
+            isRunning: false,
+            fruits: [],
+            bombs: [],
+            cutLines: [],
+            combo: 1,
+            comboTimeout: null,
+            lastCutTime: 0,
+            missedFruits: 0,
+            fruitInterval: 2000,
+            minInterval: 500,
+            lastFruitTime: 0,
+            lastBombTime: 0,
+            bombInterval: 5000,
+            animationId: null,
+            timerId: null,
+            selectedSkill: null,
+            consecutiveCuts: 0,
+            maxConsecutiveCuts: 0
         };
         
-        // 道具类型配置
-        const powerupTypes = [
-            { 
-                name: "冰冻", 
-                color1: "#3399ff", 
-                color2: "#1e6fd9", 
-                symbol: "❄️", 
-                radius: 25,
-                type: "freeze",
-                duration: 3, // 秒
-                effect: function() {
-                    // 减慢所有水果速度
-                    fruits.forEach(fruit => {
-                        fruit.vx *= 0.3;
-                        fruit.vy *= 0.3;
-                    });
-                    showMessage("时间冻结！", "#3399ff");
-                }
+        // 技能定義
+        const allSkills = [
+            {
+                id: 1,
+                name: "雙倍分數",
+                icon: "💰",
+                description: "每次切割水果獲得雙倍分數",
+                effect: "doubleScore"
             },
-            { 
-                name: "双倍分数", 
-                color1: "#ffcc00", 
-                color2: "#ff9900", 
-                symbol: "2×", 
-                radius: 25,
-                type: "doubleScore",
-                duration: 30, // 秒
-                effect: function() {
-                    showMessage("双倍分数！", "#ffcc00");
-                }
+            {
+                id: 2,
+                name: "時間延長",
+                icon: "⏱️",
+                description: "遊戲時間增加15秒",
+                effect: "extraTime"
             },
-            { 
-                name: "时间延长", 
-                color1: "#00cc66", 
-                color2: "#00994d", 
-                symbol: "+15s", 
-                radius: 25,
-                type: "extraTime",
-                duration: 0,
-                effect: function() {
-                    gameTime += 15;
-                    showMessage("时间+15秒！", "#00cc66");
-                }
+            {
+                id: 3,
+                name: "快速連擊",
+                icon: "⚡",
+                description: "連擊持續時間延長3秒",
+                effect: "longerCombo"
             },
-            { 
-                name: "全屏爆炸", 
-                color1: "#ff3366", 
-                color2: "#cc0044", 
-                symbol: "💥", 
-                radius: 25,
-                type: "screenClear",
-                duration: 0,
-                effect: function() {
-                    // 清除所有水果（除了炸弹）
-                    fruits = fruits.filter(fruit => fruit.type.isBomb);
-                    showMessage("全屏爆炸！", "#ff3366");
-                }
+            {
+                id: 4,
+                name: "炸彈免疫",
+                icon: "🛡️",
+                description: "切割炸彈不會扣分",
+                effect: "bombImmunity"
             },
-            { 
-                name: "护盾", 
-                color1: "#9966ff", 
-                color2: "#6600cc", 
-                symbol: "🛡️", 
-                radius: 25,
-                type: "shield",
-                duration: 30, // 秒
-                effect: function() {
-                    showMessage("护盾激活！", "#9966ff");
-                }
+            {
+                id: 5,
+                name: "連擊大師",
+                icon: "👑",
+                description: "連續切割8個水果觸發全屏爆炸",
+                effect: "comboMaster"
+            },
+            {
+                id: 6,
+                name: "幸運切割",
+                icon: "🍀",
+                description: "有15%機率獲得3倍分數",
+                effect: "luckyCut"
             }
         ];
         
-        // DOM元素
-        const scoreElement = document.getElementById('score');
-        const comboElement = document.getElementById('combo');
-        const livesElement = document.getElementById('lives');
-        const timeElement = document.getElementById('time');
-        const gameMessageElement = document.getElementById('game-message');
-        const powerupIndicatorElement = document.getElementById('powerup-indicator');
-        const startButton = document.getElementById('start-btn');
-        const pauseButton = document.getElementById('pause-btn');
-        const resetButton = document.getElementById('reset-btn');
+        // 鮮豔的水果顏色
+        const colors = [
+            '#FF6B8B', // 粉紅色
+            '#5A9CFF', // 藍色
+            '#4CD964', // 綠色
+            '#FFCC00', // 黃色
+            '#AF52DE'  // 紫色
+        ];
         
-        // 初始化游戏
-        function initGame() {
-            // 重置游戏状态
-            gameRunning = true;
-            gamePaused = false;
-            gameOver = false;
-            score = 0;
-            combo = 1;
-            comboTime = 0;
-            lives = 3;
-            gameTime = 60;
-            fruits = [];
-            splashes = [];
-            trails = [];
-            powerups = [];
-            activePowerups = {};
-            gameSpeed = 1.0;
-            fruitSpawnRate = 1000;
-            bombChance = 0.1;
-            gameStartTime = Date.now();
-            
-            // 更新UI
-            updateUI();
-            updatePowerupIndicator();
-            gameMessageElement.textContent = "";
-            gameMessageElement.style.opacity = 0;
-            
-            // 开始游戏循环
-            if (animationId) {
-                cancelAnimationFrame(animationId);
+        // 水果類型 - 移除所有特殊功能，只有基本水果
+        const fruitTypes = [
+            { 
+                name: '西瓜', 
+                color: '#4CD964', 
+                points: 10,
+                radius: 40  // 更大的水果
+            },
+            { 
+                name: '草莓', 
+                color: '#FF6B8B', 
+                points: 10,
+                radius: 40
+            },
+            { 
+                name: '藍莓', 
+                color: '#5A9CFF', 
+                points: 10,
+                radius: 38
+            },
+            { 
+                name: '檸檬', 
+                color: '#FFCC00', 
+                points: 10,
+                radius: 42
+            },
+            { 
+                name: '葡萄', 
+                color: '#AF52DE', 
+                points: 10,
+                radius: 36
             }
-            lastTime = performance.now();
-            animationId = requestAnimationFrame(gameLoop);
-            
-            // 初始生成一些水果（速度较慢）
-            for (let i = 0; i < 3; i++) {
-                setTimeout(() => generateFruit(), i * 800);
-            }
-            
-            // 开始游戏计时和水果生成
-            startGameTimer();
-            startFruitSpawner();
-        }
+        ];
         
-        // 生成水果
-        function generateFruit() {
-            if (!gameRunning || gamePaused || gameOver) return;
-            
-            // 根据游戏进度调整难度
-            const elapsedMinutes = (Date.now() - gameStartTime) / 60000;
-            gameSpeed = 1.0 + elapsedMinutes * 0.5; // 每分钟增加50%速度
-            bombChance = 0.1 + Math.min(elapsedMinutes * 0.05, 0.3); // 最高30%炸弹概率
-            
-            // 随机决定生成类型
-            let type;
-            const rand = Math.random();
-            
-            // 10%概率生成道具
-            if (rand < 0.1) {
-                type = powerupTypes[Math.floor(Math.random() * powerupTypes.length)];
-                type.isPowerup = true;
-            }
-            // 炸弹概率
-            else if (rand < 0.1 + bombChance) {
-                type = bombType;
-            }
-            // 水果
-            else {
-                type = fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
+        // 水果類 - 移除所有特殊功能
+        class Fruit {
+            constructor(type) {
+                this.type = type || fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
+                this.radius = this.type.radius + Math.random() * 5; // 更大的水果
+                this.x = this.radius + Math.random() * (canvas.width - 2 * this.radius);
+                this.y = canvas.height + this.radius;
+                
+                const targetHeight = NINTH_ROW_HEIGHT;
+                const gravity = 0.25;
+                
+                // 使用物理公式計算需要的初速度
+                const requiredSpeed = Math.sqrt(2 * gravity * (canvas.height - targetHeight));
+                
+                this.speedX = (Math.random() - 0.5) * 3;
+                this.speedY = -requiredSpeed;
+                this.gravity = gravity;
+                this.rotation = 0;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.05;
+                this.isSliced = false;
+                this.slicedTime = 0;
+                this.color = this.type.color;
+                this.hasScored = false;
             }
             
-            // 随机生成位置（从底部弹出）
-            const x = Math.random() * (canvas.width - 100) + 50;
-            const y = canvas.height + type.radius;
-            
-            // 随机生成速度（受游戏速度影响）
-            const baseSpeed = 8 + (gameSpeed - 1.0) * 4; // 速度随游戏进行增加
-            const vx = (Math.random() - 0.5) * baseSpeed;
-            const vy = - (Math.random() * 8 + 6 + (gameSpeed - 1.0) * 3);
-            
-            // 随机生成旋转
-            const rotation = Math.random() * Math.PI * 2;
-            const rotationSpeed = (Math.random() - 0.5) * 0.1;
-            
-            // 添加到数组
-            const item = {
-                x, y,
-                vx, vy,
-                rotation, rotationSpeed,
-                type,
-                radius: type.radius,
-                sliced: false,
-                sliceTime: 0
-            };
-            
-            if (type.isPowerup) {
-                powerups.push(item);
-            } else {
-                fruits.push(item);
-            }
-            
-            // 继续生成水果
-            if (gameRunning && fruits.length + powerups.length < 20) {
-                const delay = Math.max(200, 1000 / gameSpeed); // 最小200ms间隔
-                setTimeout(generateFruit, delay);
-            }
-        }
-        
-        // 开始水果生成器
-        function startFruitSpawner() {
-            const spawner = setInterval(() => {
-                if (!gameRunning || gamePaused || gameOver) {
-                    clearInterval(spawner);
-                    return;
+            update() {
+                if (!this.isSliced) {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.speedY += this.gravity;
+                    this.rotation += this.rotationSpeed;
+                    
+                    // 邊界反彈
+                    if (this.x < this.radius || this.x > canvas.width - this.radius) {
+                        this.speedX *= -0.8;
+                        this.x = this.x < this.radius ? this.radius : canvas.width - this.radius;
+                    }
+                } else {
+                    this.slicedTime++;
                 }
-                generateFruit();
-            }, fruitSpawnRate);
+                
+                // 如果水果掉出屏幕且沒有被切割，扣分
+                if (!this.isSliced && this.y > canvas.height + this.radius && !this.hasScored) {
+                    this.hasScored = true;
+                    
+                    game.score -= 5;
+                    scoreElement.textContent = game.score;
+                    
+                    game.missedFruits++;
+                    game.combo = 1;
+                    comboElement.textContent = 'x1';
+                    game.consecutiveCuts = 0;
+                    
+                    // 檢查是否負分
+                    if (game.score < 0 && game.isRunning) {
+                        endGame(false);
+                    }
+                }
+                
+                return this.y > canvas.height + 100 || this.slicedTime > 30;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                
+                if (!this.isSliced) {
+                    // 繪製水果主體
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 水果高光
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(-this.radius * 0.3, -this.radius * 0.3, this.radius * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 水果葉子
+                    ctx.fillStyle = '#4CD964';
+                    ctx.beginPath();
+                    ctx.ellipse(0, -this.radius * 0.8, this.radius * 0.6, this.radius * 0.3, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 水果陰影
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                    ctx.shadowBlur = 8;
+                    ctx.shadowOffsetY = 3;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.shadowOffsetY = 0;
+                    
+                    // 水果名稱
+                    ctx.fillStyle = '#333';
+                    ctx.font = `bold ${Math.floor(this.radius/4)}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(this.type.name, 0, this.radius + 10);
+                } else {
+                    // 繪製切割後的水果
+                    const sliceAngle = Math.PI / 4;
+                    
+                    // 左半部分
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(-this.radius * 0.3, 0, this.radius, sliceAngle, Math.PI * 2 - sliceAngle);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // 右半部分
+                    ctx.beginPath();
+                    ctx.arc(this.radius * 0.3, 0, this.radius, Math.PI + sliceAngle, Math.PI * 3 - sliceAngle);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // 果汁飛濺
+                    for (let i = 0; i < 8; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = Math.random() * this.radius * 1.5;
+                        const juiceX = Math.cos(angle) * distance;
+                        const juiceY = Math.sin(angle) * distance;
+                        const juiceSize = Math.random() * 5 + 2;
+                        
+                        ctx.fillStyle = this.color;
+                        ctx.beginPath();
+                        ctx.arc(juiceX, juiceY, juiceSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                
+                ctx.restore();
+            }
+            
+            slice() {
+                if (!this.isSliced && !this.hasScored) {
+                    this.isSliced = true;
+                    this.hasScored = true;
+                    
+                    // 計算基礎分數
+                    let points = this.type.points * game.combo;
+                    
+                    // 檢查是否有"雙倍分數"技能
+                    if (game.selectedSkill && game.selectedSkill.effect === "doubleScore") {
+                        points *= 2;
+                    }
+                    
+                    // 檢查是否有"幸運切割"技能
+                    if (game.selectedSkill && game.selectedSkill.effect === "luckyCut" && Math.random() < 0.15) {
+                        points *= 3;
+                    }
+                    
+                    game.score += points;
+                    scoreElement.textContent = game.score;
+                    
+                    // 增加連擊和連續切割計數
+                    const currentTime = Date.now();
+                    if (currentTime - game.lastCutTime < 1000) {
+                        game.combo = Math.min(10, game.combo + 1);
+                        game.consecutiveCuts++;
+                        
+                        // 檢查是否觸發"連擊大師"效果
+                        if (game.consecutiveCuts >= 8) {
+                            if (game.selectedSkill && game.selectedSkill.effect === "comboMaster") {
+                                triggerComboMaster();
+                            }
+                        }
+                    } else {
+                        game.combo = 1;
+                        game.consecutiveCuts = 1;
+                    }
+                    
+                    game.lastCutTime = currentTime;
+                    
+                    comboElement.textContent = `x${game.combo}`;
+                    
+                    // 重置連擊計時器
+                    if (game.comboTimeout) clearTimeout(game.comboTimeout);
+                    
+                    const comboDuration = (game.selectedSkill && game.selectedSkill.effect === "longerCombo") ? 3000 : 1500;
+                    game.comboTimeout = setTimeout(() => {
+                        game.combo = 1;
+                        comboElement.textContent = 'x1';
+                        game.consecutiveCuts = 0;
+                    }, comboDuration);
+                    
+                    return true;
+                }
+                return false;
+            }
         }
         
-        // 游戏主循环
-        function gameLoop(currentTime) {
-            const deltaTime = (currentTime - lastTime) / 1000; // 转换为秒
-            lastTime = currentTime;
+        // 炸彈類
+        class Bomb {
+            constructor() {
+                this.radius = 35; // 更大的炸彈
+                this.x = this.radius + Math.random() * (canvas.width - 2 * this.radius);
+                this.y = canvas.height + this.radius;
+                
+                const targetHeight = NINTH_ROW_HEIGHT;
+                const gravity = 0.25;
+                const requiredSpeed = Math.sqrt(2 * gravity * (canvas.height - targetHeight));
+                
+                this.speedX = (Math.random() - 0.5) * 2;
+                this.speedY = -requiredSpeed * 0.8;
+                this.gravity = gravity;
+                this.rotation = 0;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.03;
+                this.isExploded = false;
+                this.explodedTime = 0;
+                this.color = '#000000';
+            }
             
-            // 清空画布
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            update() {
+                if (!this.isExploded) {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.speedY += this.gravity;
+                    this.rotation += this.rotationSpeed;
+                    
+                    // 邊界反彈
+                    if (this.x < this.radius || this.x > canvas.width - this.radius) {
+                        this.speedX *= -0.8;
+                        this.x = this.x < this.radius ? this.radius : canvas.width - this.radius;
+                    }
+                } else {
+                    this.explodedTime++;
+                }
+                
+                return this.y > canvas.height + 100 || this.explodedTime > 30;
+            }
             
-            // 绘制背景
-            drawBackground();
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                
+                if (!this.isExploded) {
+                    // 繪製炸彈主體
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 炸彈引信
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(-4, -this.radius - 8, 8, 15);
+                    
+                    // 炸彈警告標誌
+                    ctx.fillStyle = '#FF0000';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -this.radius * 0.5);
+                    ctx.lineTo(this.radius * 0.4, this.radius * 0.2);
+                    ctx.lineTo(-this.radius * 0.4, this.radius * 0.2);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // 炸彈文字
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 18px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('-1000', 0, 0);
+                    
+                    // 炸彈陰影
+                    ctx.shadowColor = 'rgba(255, 0, 0, 0.5)';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowOffsetY = 3;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.shadowOffsetY = 0;
+                } else {
+                    // 繪製爆炸效果
+                    ctx.fillStyle = '#FF9500';
+                    for (let i = 0; i < 12; i++) {
+                        const angle = (i * Math.PI * 2) / 12;
+                        const distance = this.radius * 2;
+                        const sparkX = Math.cos(angle) * distance;
+                        const sparkY = Math.sin(angle) * distance;
+                        const sparkSize = Math.random() * 10 + 5;
+                        
+                        ctx.beginPath();
+                        ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    ctx.fillStyle = '#FF0000';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
             
-            // 更新和绘制道具
-            updatePowerups(deltaTime);
-            
-            // 更新和绘制果汁飞溅
-            updateSplashes(deltaTime);
-            
-            // 更新和绘制轨迹
-            updateTrails(deltaTime);
-            
-            // 更新和绘制水果
-            updateFruits(deltaTime);
-            
-            // 更新连击时间
-            if (combo > 1) {
-                comboTime -= deltaTime;
-                if (comboTime <= 0) {
-                    combo = 1;
-                    updateUI();
+            explode() {
+                if (!this.isExploded) {
+                    this.isExploded = true;
+                    
+                    // 檢查是否有"炸彈免疫"技能
+                    const hasBombImmunity = game.selectedSkill && game.selectedSkill.effect === "bombImmunity";
+                    
+                    if (!hasBombImmunity) {
+                        // 炸彈扣1000分！
+                        game.score -= 1000;
+                        scoreElement.textContent = game.score;
+                        
+                        // 顯示警告
+                        bombWarning.style.display = 'block';
+                        setTimeout(() => {
+                            bombWarning.style.display = 'none';
+                        }, 2000);
+                        
+                        // 檢查是否負分
+                        if (game.score < 0 && game.isRunning) {
+                            endGame(false);
+                        }
+                    }
+                    
+                    // 切到炸彈不會重置連擊！
+                    
+                    return true;
+                }
+                return false;
+            }
+        }
+        
+        // 觸發連擊大師效果
+        function triggerComboMaster() {
+            // 清除屏幕上所有水果
+            for (let i = game.fruits.length - 1; i >= 0; i--) {
+                const fruit = game.fruits[i];
+                if (!fruit.isSliced) {
+                    fruit.isSliced = true;
+                    fruit.hasScored = true;
+                    game.score += fruit.type.points * 2;
+                    scoreElement.textContent = game.score;
                 }
             }
             
-            // 更新激活的道具效果
-            updateActivePowerups(deltaTime);
-            
-            // 绘制道具效果
-            drawPowerupEffects();
-            
-            // 继续游戏循环
-            if (gameRunning && !gamePaused && !gameOver) {
-                animationId = requestAnimationFrame(gameLoop);
+            // 添加爆炸效果
+            for (let i = 0; i < 20; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 20 + 10;
+                
+                game.cutLines.push({
+                    x1: x,
+                    y1: y,
+                    x2: x + Math.random() * 100 - 50,
+                    y2: y + Math.random() * 100 - 50,
+                    color: '#FF0000',
+                    life: 20
+                });
             }
+            
+            // 重置連續切割計數
+            game.consecutiveCuts = 0;
         }
         
-        // 绘制背景
-        function drawBackground() {
-            // 背景渐变
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, "#0a1630");
-            gradient.addColorStop(1, "#0a0a1a");
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // 网格效果
-            ctx.strokeStyle = "rgba(100, 150, 255, 0.05)";
+        // 繪製網格背景
+        function drawGridBackground() {
+            ctx.strokeStyle = '#f0f0f0';
             ctx.lineWidth = 1;
             
-            // 垂直线
-            for (let x = 0; x < canvas.width; x += 50) {
+            // 繪製網格線
+            for (let x = 0; x <= canvas.width; x += canvas.width / 12) {
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, canvas.height);
                 ctx.stroke();
             }
             
-            // 水平线
-            for (let y = 0; y < canvas.height; y += 50) {
+            for (let y = 0; y <= canvas.height; y += canvas.height / 12) {
                 ctx.beginPath();
                 ctx.moveTo(0, y);
                 ctx.lineTo(canvas.width, y);
                 ctx.stroke();
             }
             
-            // 底部阴影
-            const shadowGradient = ctx.createLinearGradient(0, canvas.height - 100, 0, canvas.height);
-            shadowGradient.addColorStop(0, "rgba(0, 0, 0, 0)");
-            shadowGradient.addColorStop(1, "rgba(0, 0, 0, 0.5)");
-            ctx.fillStyle = shadowGradient;
-            ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
-            
-            // 绘制当前游戏速度指示
-            ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-            ctx.font = "bold 16px Arial";
-            ctx.textAlign = "right";
-            ctx.fillText(`速度: x${gameSpeed.toFixed(1)}`, canvas.width - 20, 30);
+            // 標記第9格（從底部數）
+            ctx.fillStyle = 'rgba(255, 107, 139, 0.1)';
+            const ninthRowY = canvas.height - (gridHeight * 9);
+            ctx.fillRect(0, ninthRowY, canvas.width, gridHeight);
         }
         
-        // 更新水果状态
-        function updateFruits(deltaTime) {
-            for (let i = fruits.length - 1; i >= 0; i--) {
-                const fruit = fruits[i];
-                
-                // 应用冰冻效果
-                let speedMultiplier = 1.0;
-                if (activePowerups.freeze) {
-                    speedMultiplier = 0.3;
-                }
-                
-                // 更新位置
-                fruit.x += fruit.vx * speedMultiplier;
-                fruit.y += fruit.vy * speedMultiplier;
-                fruit.vy += 0.5 * speedMultiplier; // 重力
-                fruit.rotation += fruit.rotationSpeed * speedMultiplier;
-                
-                // 更新切片时间（如果已切片）
-                if (fruit.sliced) {
-                    fruit.sliceTime += deltaTime;
-                }
-                
-                // 边界检查
-                if (fruit.x < fruit.radius) {
-                    fruit.x = fruit.radius;
-                    fruit.vx *= -0.7; // 弹性碰撞
-                } else if (fruit.x > canvas.width - fruit.radius) {
-                    fruit.x = canvas.width - fruit.radius;
-                    fruit.vx *= -0.7;
-                }
-                
-                // 如果水果掉出屏幕底部且未切片，减少生命值（如果不是炸弹）
-                if (fruit.y > canvas.height + 100) {
-                    fruits.splice(i, 1);
-                    if (!fruit.sliced && !fruit.type.isBomb && gameRunning) {
-                        loseLife();
-                    }
-                    continue;
-                }
-                
-                // 绘制水果
-                drawFruit(fruit);
-                
-                // 如果切片时间过长，移除水果
-                if (fruit.sliced && fruit.sliceTime > 2) {
-                    fruits.splice(i, 1);
-                }
-            }
-        }
-        
-        // 更新道具状态
-        function updatePowerups(deltaTime) {
-            for (let i = powerups.length - 1; i >= 0; i--) {
-                const powerup = powerups[i];
-                
-                // 更新位置
-                powerup.x += powerup.vx;
-                powerup.y += powerup.vy;
-                powerup.vy += 0.5; // 重力
-                powerup.rotation += powerup.rotationSpeed;
-                
-                // 边界检查
-                if (powerup.x < powerup.radius) {
-                    powerup.x = powerup.radius;
-                    powerup.vx *= -0.7;
-                } else if (powerup.x > canvas.width - powerup.radius) {
-                    powerup.x = canvas.width - powerup.radius;
-                    powerup.vx *= -0.7;
-                }
-                
-                // 如果道具掉出屏幕底部，移除
-                if (powerup.y > canvas.height + 100) {
-                    powerups.splice(i, 1);
-                    continue;
-                }
-                
-                // 绘制道具
-                drawPowerup(powerup);
-            }
-        }
-        
-        // 绘制水果
-        function drawFruit(fruit) {
-            ctx.save();
-            ctx.translate(fruit.x, fruit.y);
-            ctx.rotate(fruit.rotation);
+        // 顯示技能選擇界面
+        function showSkillSelection() {
+            // 清空技能容器
+            skillsContainer.innerHTML = '';
             
-            // 绘制水果主体
-            const gradient = ctx.createRadialGradient(
-                -fruit.radius/3, -fruit.radius/3, 1,
-                0, 0, fruit.radius
-            );
-            gradient.addColorStop(0, fruit.type.color1);
-            gradient.addColorStop(1, fruit.type.color2);
+            // 隨機選擇3個技能
+            const shuffledSkills = [...allSkills].sort(() => Math.random() - 0.5).slice(0, 3);
             
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 水果高光
-            ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
-            ctx.beginPath();
-            ctx.arc(-fruit.radius/3, -fruit.radius/3, fruit.radius/3, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 如果是炸弹，绘制引信
-            if (fruit.type.isBomb) {
-                // 炸弹引信
-                ctx.fillStyle = "#ff6600";
-                ctx.fillRect(-5, -fruit.radius - 10, 10, 15);
+            // 創建技能卡片
+            shuffledSkills.forEach(skill => {
+                const skillCard = document.createElement('div');
+                skillCard.className = 'skill-card';
+                skillCard.dataset.id = skill.id;
                 
-                // 引信火花
-                ctx.fillStyle = "#ffcc00";
-                ctx.beginPath();
-                ctx.arc(0, -fruit.radius - 15, 5, 0, Math.PI * 2);
-                ctx.fill();
+                skillCard.innerHTML = `
+                    <div class="skill-icon">${skill.icon}</div>
+                    <div class="skill-name">${skill.name}</div>
+                    <div class="skill-desc">${skill.description}</div>
+                `;
                 
-                // 炸弹危险标志
-                ctx.fillStyle = "#ff0000";
-                ctx.font = "bold 24px Arial";
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText("💣", 0, 0);
-            } else {
-                // 水果数字
-                ctx.fillStyle = "white";
-                ctx.font = `bold ${fruit.radius}px Arial`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText(fruit.type.symbol, 0, 0);
-            }
-            
-            // 如果水果被切片，绘制切片效果
-            if (fruit.sliced) {
-                ctx.fillStyle = fruit.type.color1;
-                // 左半部分
-                ctx.beginPath();
-                ctx.arc(-fruit.radius/2, 0, fruit.radius/2, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // 右半部分
-                ctx.beginPath();
-                ctx.arc(fruit.radius/2, 0, fruit.radius/2, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // 果汁内部
-                ctx.fillStyle = fruit.type.color2;
-                ctx.beginPath();
-                ctx.arc(-fruit.radius/2, 0, fruit.radius/4, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.arc(fruit.radius/2, 0, fruit.radius/4, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            ctx.restore();
-        }
-        
-        // 绘制道具
-        function drawPowerup(powerup) {
-            ctx.save();
-            ctx.translate(powerup.x, powerup.y);
-            ctx.rotate(powerup.rotation);
-            
-            // 绘制道具主体
-            const gradient = ctx.createRadialGradient(
-                -powerup.radius/3, -powerup.radius/3, 1,
-                0, 0, powerup.radius
-            );
-            gradient.addColorStop(0, powerup.type.color1);
-            gradient.addColorStop(1, powerup.type.color2);
-            
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(0, 0, powerup.radius, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 道具高光
-            ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-            ctx.beginPath();
-            ctx.arc(-powerup.radius/3, -powerup.radius/3, powerup.radius/3, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 道具图标
-            ctx.fillStyle = "white";
-            ctx.font = `bold ${powerup.radius}px Arial`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(powerup.type.symbol, 0, 0);
-            
-            // 外发光
-            ctx.shadowColor = powerup.type.color1;
-            ctx.shadowBlur = 15;
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, powerup.radius, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-            
-            ctx.restore();
-        }
-        
-        // 绘制道具效果
-        function drawPowerupEffects() {
-            // 冰冻效果
-            if (activePowerups.freeze) {
-                ctx.fillStyle = "rgba(51, 153, 255, 0.2)";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // 绘制冰晶效果
-                ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-                for (let i = 0; i < 20; i++) {
-                    const x = Math.random() * canvas.width;
-                    const y = Math.random() * canvas.height;
-                    const size = Math.random() * 10 + 5;
-                    ctx.beginPath();
-                    ctx.arc(x, y, size, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-            
-            // 双倍分数效果
-            if (activePowerups.doubleScore) {
-                ctx.fillStyle = "rgba(255, 204, 0, 0.1)";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-            
-            // 护盾效果
-            if (activePowerups.shield) {
-                ctx.strokeStyle = "rgba(153, 102, 255, 0.5)";
-                ctx.lineWidth = 3;
-                ctx.setLineDash([10, 5]);
-                ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
-                ctx.setLineDash([]);
-            }
-        }
-        
-        // 更新激活的道具效果
-        function updateActivePowerups(deltaTime) {
-            for (const type in activePowerups) {
-                if (activePowerups[type].duration > 0) {
-                    activePowerups[type].duration -= deltaTime;
-                    if (activePowerups[type].duration <= 0) {
-                        delete activePowerups[type];
-                        updatePowerupIndicator();
-                    }
-                }
-            }
-        }
-        
-        // 更新果汁飞溅效果
-        function updateSplashes(deltaTime) {
-            for (let i = splashes.length - 1; i >= 0; i--) {
-                const splash = splashes[i];
-                splash.life -= deltaTime;
-                
-                if (splash.life <= 0) {
-                    splashes.splice(i, 1);
-                    continue;
-                }
-                
-                // 更新位置
-                splash.x += splash.vx;
-                splash.y += splash.vy;
-                splash.vy += 0.2; // 重力
-                
-                // 绘制果汁飞溅
-                ctx.fillStyle = splash.color;
-                ctx.globalAlpha = splash.life / splash.maxLife;
-                ctx.beginPath();
-                ctx.arc(splash.x, splash.y, splash.radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-        }
-        
-        // 更新轨迹效果
-        function updateTrails(deltaTime) {
-            for (let i = trails.length - 1; i >= 0; i--) {
-                const trail = trails[i];
-                trail.life -= deltaTime * 3;
-                
-                if (trail.life <= 0) {
-                    trails.splice(i, 1);
-                    continue;
-                }
-                
-                // 绘制轨迹
-                ctx.strokeStyle = `rgba(255, 255, 255, ${trail.life})`;
-                ctx.lineWidth = trail.width;
-                ctx.lineCap = "round";
-                ctx.beginPath();
-                ctx.moveTo(trail.x1, trail.y1);
-                ctx.lineTo(trail.x2, trail.y2);
-                ctx.stroke();
-            }
-        }
-        
-        // 切割检测
-        function sliceAt(x, y) {
-            if (!gameRunning || gamePaused || gameOver) return false;
-            
-            let slicedSomething = false;
-            
-            // 检查水果
-            for (let i = fruits.length - 1; i >= 0; i--) {
-                const fruit = fruits[i];
-                
-                // 检查是否切割到水果
-                const distance = Math.sqrt((x - fruit.x) ** 2 + (y - fruit.y) ** 2);
-                
-                if (distance < fruit.radius && !fruit.sliced) {
-                    handleFruitSlice(fruit, i);
-                    slicedSomething = true;
-                    break;
-                }
-            }
-            
-            // 检查道具
-            if (!slicedSomething) {
-                for (let i = powerups.length - 1; i >= 0; i--) {
-                    const powerup = powerups[i];
+                skillCard.addEventListener('click', () => {
+                    // 移除所有卡片的選擇狀態
+                    document.querySelectorAll('.skill-card').forEach(card => {
+                        card.classList.remove('selected');
+                    });
                     
-                    const distance = Math.sqrt((x - powerup.x) ** 2 + (y - powerup.y) ** 2);
+                    // 設置當前卡片為選擇狀態
+                    skillCard.classList.add('selected');
                     
-                    if (distance < powerup.radius) {
-                        handlePowerupSlice(powerup, i);
-                        slicedSomething = true;
-                        break;
-                    }
-                }
-            }
+                    // 設置選擇的技能
+                    game.selectedSkill = skill;
+                    
+                    // 更新按鈕文字
+                    selectSkillBtn.textContent = `開始遊戲`;
+                });
+                
+                skillsContainer.appendChild(skillCard);
+            });
             
-            // 连击处理
-            if (slicedSomething) {
-                // 增加连击
-                combo = Math.min(combo + 1, 10);
-                comboTime = 2; // 重置连击时间
-                showComboPopup(x, y, combo);
-            } else if (combo > 1) {
-                // 断连重置
-                combo = 1;
-                comboTime = 0;
-            }
-            
-            return slicedSomething;
+            // 顯示技能選擇界面
+            skillSelection.style.display = 'flex';
+            selectSkillBtn.textContent = `請選擇一個技能`;
         }
         
-        // 处理水果切割
-        function handleFruitSlice(fruit, index) {
-            // 标记水果为已切割
-            fruit.sliced = true;
-            fruit.vx = (Math.random() - 0.5) * 10;
-            fruit.vy = -5;
+        // 更新活動技能顯示
+        function updateActiveSkillsDisplay() {
+            activeSkillsElement.innerHTML = '';
             
-            // 创建果汁飞溅效果
-            createSplash(fruit.x, fruit.y, fruit.type.color1);
+            if (game.selectedSkill) {
+                const skillEl = document.createElement('div');
+                skillEl.className = 'active-skill';
+                skillEl.innerHTML = `${game.selectedSkill.icon} ${game.selectedSkill.name}`;
+                activeSkillsElement.appendChild(skillEl);
+            }
+        }
+        
+        // 初始化遊戲
+        function initGame() {
+            game.score = 0;
+            game.timeLeft = 60;
+            game.isRunning = false;
+            game.fruits = [];
+            game.bombs = [];
+            game.cutLines = [];
+            game.combo = 1;
+            game.missedFruits = 0;
+            game.fruitInterval = 2000;
+            game.lastFruitTime = 0;
+            game.lastBombTime = 0;
+            game.selectedSkill = null;
+            game.consecutiveCuts = 0;
+            game.maxConsecutiveCuts = 0;
             
-            // 如果是炸弹，处理爆炸
-            if (fruit.type.isBomb) {
-                // 检查是否有护盾
-                if (activePowerups.shield) {
-                    showMessage("护盾抵挡了炸弹！", "#9966ff");
-                    delete activePowerups.shield;
-                    updatePowerupIndicator();
-                } else {
-                    handleBombExplosion(fruit.x, fruit.y);
-                }
+            scoreElement.textContent = '0';
+            timeElement.textContent = '時間: 60秒';
+            fruitCountElement.textContent = '水果: 0';
+            comboElement.textContent = 'x1';
+            gameOverScreen.style.display = 'none';
+            skillSelection.style.display = 'none';
+            startGameBtn.textContent = '開始遊戲';
+            startGameBtn.disabled = false;
+            
+            if (game.animationId) cancelAnimationFrame(game.animationId);
+            if (game.timerId) clearInterval(game.timerId);
+            if (game.comboTimeout) clearTimeout(game.comboTimeout);
+            
+            // 清空活動技能顯示
+            activeSkillsElement.innerHTML = '';
+        }
+        
+        // 開始遊戲
+        function startGame() {
+            if (game.isRunning) return;
+            
+            // 如果還沒有選擇技能，顯示技能選擇界面
+            if (!game.selectedSkill) {
+                showSkillSelection();
                 return;
             }
             
-            // 计算分数（考虑连击和双倍分数）
-            let points = fruit.type.score * combo;
-            if (activePowerups.doubleScore) {
-                points *= 2;
-            }
-            score += points;
+            // 應用技能效果
+            applySkillEffects();
             
-            // 显示分数获得
-            showScorePopup(fruit.x, fruit.y, points);
+            game.isRunning = true;
+            skillSelection.style.display = 'none';
+            startGameBtn.textContent = '遊戲中...';
+            startGameBtn.disabled = true;
             
-            // 检查成就
-            checkAchievements();
+            // 更新活動技能顯示
+            updateActiveSkillsDisplay();
             
-            updateUI();
-        }
-        
-        // 处理道具切割
-        function handlePowerupSlice(powerup, index) {
-            // 移除道具
-            powerups.splice(index, 1);
-            
-            // 创建特效
-            createSplash(powerup.x, powerup.y, powerup.type.color1);
-            
-            // 激活道具效果
-            activatePowerup(powerup.type);
-            
-            updateUI();
-        }
-        
-        // 激活道具
-        function activatePowerup(powerupType) {
-            // 执行道具效果
-            powerupType.effect();
-            
-            // 添加到激活道具列表
-            activePowerups[powerupType.type] = {
-                type: powerupType.type,
-                duration: powerupType.duration,
-                startTime: Date.now()
-            };
-            
-            updatePowerupIndicator();
-        }
-        
-        // 处理炸弹爆炸
-        function handleBombExplosion(x, y) {
-            // 减少生命值
-            loseLife();
-            
-            // 重置连击
-            combo = 1;
-            comboTime = 0;
-            
-            // 创建爆炸效果
-            for (let i = 0; i < 30; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 8 + 3;
+            game.timerId = setInterval(() => {
+                game.timeLeft--;
+                timeElement.textContent = `時間: ${game.timeLeft}秒`;
                 
-                splashes.push({
-                    x, y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    radius: Math.random() * 6 + 3,
-                    color: "#ff6600",
-                    life: 1.5,
-                    maxLife: 1.5
-                });
-            }
-            
-            // 显示爆炸消息
-            showMessage("炸弹！", "#ff3366");
-            
-            // 检查游戏是否结束
-            if (lives <= 0) {
-                gameOver = true;
-                endGame(false);
-            }
-        }
-        
-        // 减少生命
-        function loseLife() {
-            lives--;
-            
-            // 生命值动画
-            livesElement.classList.add('life-lost');
-            setTimeout(() => {
-                livesElement.classList.remove('life-lost');
-            }, 500);
-            
-            updateUI();
-        }
-        
-        // 创建果汁飞溅效果
-        function createSplash(x, y, color) {
-            const particleCount = 20;
-            
-            for (let i = 0; i < particleCount; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 6 + 3;
-                
-                splashes.push({
-                    x, y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    radius: Math.random() * 8 + 4,
-                    color: color,
-                    life: 1,
-                    maxLife: 1
-                });
-            }
-        }
-        
-        // 显示连击弹窗
-        function showComboPopup(x, y, comboValue) {
-            const popup = document.createElement('div');
-            popup.className = 'combo-popup';
-            popup.textContent = `${comboValue}连击!`;
-            popup.style.left = `${x}px`;
-            popup.style.top = `${y}px`;
-            
-            document.querySelector('.game-container').appendChild(popup);
-            
-            // 自动移除
-            setTimeout(() => {
-                if (popup.parentNode) {
-                    popup.parentNode.removeChild(popup);
-                }
-            }, 1500);
-        }
-        
-        // 显示分数弹窗
-        function showScorePopup(x, y, score) {
-            const popup = document.createElement('div');
-            popup.className = 'combo-popup';
-            popup.textContent = `+${score}`;
-            popup.style.left = `${x}px`;
-            popup.style.top = `${y}px`;
-            popup.style.color = '#ffcc00';
-            popup.style.fontSize = '2rem';
-            
-            document.querySelector('.game-container').appendChild(popup);
-            
-            // 自动移除
-            setTimeout(() => {
-                if (popup.parentNode) {
-                    popup.parentNode.removeChild(popup);
-                }
-            }, 1000);
-        }
-        
-        // 显示游戏消息
-        function showMessage(text, color) {
-            gameMessageElement.textContent = text;
-            gameMessageElement.style.color = color;
-            gameMessageElement.style.opacity = 1;
-            
-            // 淡出效果
-            setTimeout(() => {
-                let opacity = 1;
-                const fadeOut = setInterval(() => {
-                    opacity -= 0.05;
-                    gameMessageElement.style.opacity = opacity;
-                    
-                    if (opacity <= 0) {
-                        clearInterval(fadeOut);
-                        gameMessageElement.style.opacity = 0;
-                    }
-                }, 50);
-            }, 1000);
-        }
-        
-        // 开始游戏计时器
-        function startGameTimer() {
-            const timer = setInterval(() => {
-                if (!gameRunning || gamePaused || gameOver) {
-                    clearInterval(timer);
-                    return;
+                // 隨時間增加水果生成頻率
+                if (game.fruitInterval > game.minInterval) {
+                    game.fruitInterval = Math.max(game.minInterval, 2000 - (60 - game.timeLeft) * 25);
                 }
                 
-                gameTime--;
-                timeElement.textContent = gameTime;
-                
-                // 时间到，游戏结束
-                if (gameTime <= 0) {
-                    clearInterval(timer);
-                    gameOver = true;
+                if (game.timeLeft <= 0) {
                     endGame(true);
                 }
             }, 1000);
+            
+            gameLoop();
         }
         
-        // 检查成就
-        function checkAchievements() {
-            // 连击成就
-            if (combo >= 5) {
-                showMessage(`${combo}连击！太棒了！`, "#ff66cc");
-            }
-            
-            // 分数成就
-            if (score >= 1000 && score < 1100) {
-                showMessage("突破1000分！", "#ffcc00");
-            } else if (score >= 2000 && score < 2100) {
-                showMessage("突破2000分！大师级！", "#00ff9d");
+        // 應用技能效果
+        function applySkillEffects() {
+            // 檢查"時間延長"技能
+            const hasExtraTime = game.selectedSkill && game.selectedSkill.effect === "extraTime";
+            if (hasExtraTime) {
+                game.timeLeft += 15;
+                timeElement.textContent = `時間: ${game.timeLeft}秒`;
             }
         }
         
-        // 结束游戏
-        function endGame(success) {
-            gameRunning = false;
+        // 結束遊戲
+        function endGame(isTimeUp) {
+            game.isRunning = false;
+            clearInterval(game.timerId);
+            cancelAnimationFrame(game.animationId);
             
-            if (success) {
-                showMessage(`时间到！最终分数: ${score}`, "#00ff9d");
+            finalScoreElement.textContent = game.score;
+            
+            if (game.score < 0) {
+                gameOverTitle.textContent = '遊戲結束 (負分)';
+                gameOverTitle.style.color = '#ff4d6d';
+            } else if (isTimeUp) {
+                gameOverTitle.textContent = '時間到!';
+                gameOverTitle.style.color = '#5a9cff';
             } else {
-                showMessage(`游戏结束！最终分数: ${score}`, "#ff3366");
+                gameOverTitle.textContent = '遊戲結束';
+                gameOverTitle.style.color = '#ff6b8b';
             }
-        }
-        
-        // 更新UI
-        function updateUI() {
-            scoreElement.textContent = score;
-            comboElement.textContent = `x${combo}`;
-            livesElement.textContent = lives;
-            timeElement.textContent = gameTime;
-        }
-        
-        // 更新道具指示器
-        function updatePowerupIndicator() {
-            powerupIndicatorElement.innerHTML = '';
             
-            for (const type in activePowerups) {
-                const powerup = activePowerups[type];
-                const powerupType = powerupTypes.find(p => p.type === type);
-                
-                if (powerupType) {
-                    const icon = document.createElement('div');
-                    icon.className = 'powerup-icon';
-                    icon.textContent = powerupType.symbol;
-                    icon.style.backgroundColor = powerupType.color1;
-                    icon.style.color = 'white';
+            gameOverScreen.style.display = 'flex';
+            startGameBtn.textContent = '開始遊戲';
+            startGameBtn.disabled = false;
+        }
+        
+        // 遊戲主循環
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 繪製網格背景
+            drawGridBackground();
+            
+            // 生成新水果
+            if (game.isRunning) {
+                const currentTime = Date.now();
+                if (currentTime - game.lastFruitTime > game.fruitInterval) {
+                    // 初始階段生成1-2個水果，後期逐漸增加
+                    const baseCount = Math.floor((60 - game.timeLeft) / 20) + 1;
+                    const fruitCount = Math.min(4, baseCount);
                     
-                    // 添加倒计时
-                    if (powerup.duration > 0) {
-                        const time = document.createElement('div');
-                        time.style.fontSize = '0.8rem';
-                        time.style.marginTop = '5px';
-                        time.textContent = Math.ceil(powerup.duration);
-                        icon.appendChild(time);
+                    for (let i = 0; i < fruitCount; i++) {
+                        setTimeout(() => {
+                            if (game.isRunning) {
+                                game.fruits.push(new Fruit());
+                                fruitCountElement.textContent = `水果: ${game.fruits.length}`;
+                            }
+                        }, i * 300);
                     }
                     
-                    powerupIndicatorElement.appendChild(icon);
+                    game.lastFruitTime = currentTime;
+                }
+                
+                // 生成炸彈（當分數達到60分以上時）
+                if (game.score >= 60 && currentTime - game.lastBombTime > game.bombInterval) {
+                    game.bombs.push(new Bomb());
+                    game.lastBombTime = currentTime;
                 }
             }
-        }
-        
-        // 鼠标/触摸事件处理
-        function handleStart(x, y) {
-            if (!gameRunning || gamePaused || gameOver) return;
             
-            isDrawing = true;
-            lastX = x;
-            lastY = y;
-            
-            // 立即切割起点位置
-            sliceAt(x, y);
-        }
-        
-        function handleMove(x, y) {
-            if (!isDrawing || !gameRunning || gamePaused || gameOver) return;
-            
-            // 切割轨迹上的点
-            const steps = 15;
-            for (let i = 0; i < steps; i++) {
-                const stepX = lastX + (x - lastX) * (i / steps);
-                const stepY = lastY + (y - lastY) * (i / steps);
-                sliceAt(stepX, stepY);
-            }
-            
-            // 添加轨迹效果
-            trails.push({
-                x1: lastX, y1: lastY,
-                x2: x, y2: y,
-                width: 6,
-                life: 1
-            });
-            
-            lastX = x;
-            lastY = y;
-        }
-        
-        function handleEnd() {
-            isDrawing = false;
-        }
-        
-        // 事件监听器设置
-        function setupEventListeners() {
-            // 鼠标事件
-            canvas.addEventListener('mousedown', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                handleStart(x, y);
-            });
-            
-            canvas.addEventListener('mousemove', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                handleMove(x, y);
-            });
-            
-            canvas.addEventListener('mouseup', handleEnd);
-            canvas.addEventListener('mouseleave', handleEnd);
-            
-            // 触摸事件（移动设备）
-            canvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const rect = canvas.getBoundingClientRect();
-                const touch = e.touches[0];
-                const x = touch.clientX - rect.left;
-                const y = touch.clientY - rect.top;
-                handleStart(x, y);
-            });
-            
-            canvas.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                const rect = canvas.getBoundingClientRect();
-                const touch = e.touches[0];
-                const x = touch.clientX - rect.left;
-                const y = touch.clientY - rect.top;
-                handleMove(x, y);
-            });
-            
-            canvas.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                handleEnd();
-            });
-            
-            // 按钮事件
-            startButton.addEventListener('click', () => {
-                if (!gameRunning || gameOver) {
-                    initGame();
-                    startButton.textContent = "重新开始";
-                }
-            });
-            
-            pauseButton.addEventListener('click', () => {
-                if (!gameRunning) return;
+            // 更新和繪製水果
+            for (let i = game.fruits.length - 1; i >= 0; i--) {
+                const fruit = game.fruits[i];
+                const shouldRemove = fruit.update();
                 
-                gamePaused = !gamePaused;
-                
-                if (gamePaused) {
-                    pauseButton.textContent = "继续";
-                    showMessage("游戏暂停", "#ff9900");
+                if (shouldRemove) {
+                    game.fruits.splice(i, 1);
+                    fruitCountElement.textContent = `水果: ${game.fruits.length}`;
                 } else {
-                    pauseButton.textContent = "暂停";
-                    lastTime = performance.now();
-                    animationId = requestAnimationFrame(gameLoop);
+                    fruit.draw();
                 }
-            });
+            }
             
-            resetButton.addEventListener('click', () => {
-                initGame();
-            });
+            // 更新和繪製炸彈
+            for (let i = game.bombs.length - 1; i >= 0; i--) {
+                const bomb = game.bombs[i];
+                const shouldRemove = bomb.update();
+                
+                if (shouldRemove) {
+                    game.bombs.splice(i, 1);
+                } else {
+                    bomb.draw();
+                }
+            }
             
-            // 窗口大小调整
-            window.addEventListener('resize', () => {
-                canvas.width = canvas.offsetWidth;
-                canvas.height = canvas.offsetHeight;
-            });
+            // 更新和繪製切割線
+            for (let i = game.cutLines.length - 1; i >= 0; i--) {
+                const line = game.cutLines[i];
+                line.life--;
+                
+                if (line.life <= 0) {
+                    game.cutLines.splice(i, 1);
+                } else {
+                    drawCutLine(line);
+                }
+            }
+            
+            if (game.isRunning) {
+                game.animationId = requestAnimationFrame(gameLoop);
+            }
         }
         
-        // 初始化
-        function init() {
-            setupEventListeners();
+        // 繪製切割線
+        function drawCutLine(line) {
+            const gradient = ctx.createLinearGradient(line.x1, line.y1, line.x2, line.y2);
+            gradient.addColorStop(0, line.color + 'FF');
+            gradient.addColorStop(1, line.color + '00');
+            
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.globalAlpha = line.life / 30;
+            
+            ctx.beginPath();
+            ctx.moveTo(line.x1, line.y1);
+            ctx.lineTo(line.x2, line.y2);
+            ctx.stroke();
+            
+            ctx.globalAlpha = 1.0;
+        }
+        
+        // 切割物體
+        function sliceObject(x1, y1, x2, y2) {
+            if (!game.isRunning) return;
+            
+            let slicedAny = false;
+            
+            // 檢查是否切割到水果
+            for (let i = 0; i < game.fruits.length; i++) {
+                const fruit = game.fruits[i];
+                
+                if (lineIntersectsCircle(x1, y1, x2, y2, fruit.x, fruit.y, fruit.radius)) {
+                    if (fruit.slice()) {
+                        slicedAny = true;
+                        
+                        // 檢查分數是否變負
+                        if (game.score < 0) {
+                            endGame(false);
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            // 檢查是否切割到炸彈
+            for (let i = 0; i < game.bombs.length; i++) {
+                const bomb = game.bombs[i];
+                
+                if (lineIntersectsCircle(x1, y1, x2, y2, bomb.x, bomb.y, bomb.radius)) {
+                    if (bomb.explode()) {
+                        slicedAny = true;
+                        // 不重置連擊
+                        
+                        // 檢查分數是否變負
+                        if (game.score < 0) {
+                            endGame(false);
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            // 添加切割線效果
+            if (slicedAny || Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) > 10) {
+                const colorIndex = Math.floor(Math.random() * colors.length);
+                game.cutLines.push({
+                    x1: x1,
+                    y1: y1,
+                    x2: x2,
+                    y2: y2,
+                    color: colors[colorIndex],
+                    life: 30
+                });
+            }
+        }
+        
+        // 檢查線段與圓是否相交
+        function lineIntersectsCircle(x1, y1, x2, y2, cx, cy, r) {
+            // 簡化檢查：檢查線段中點到圓心的距離
+            const mx = (x1 + x2) / 2;
+            const my = (y1 + y2) / 2;
+            const distance = Math.sqrt((mx - cx) ** 2 + (my - cy) ** 2);
+            
+            return distance < r + 10;
+        }
+        
+        // 事件監聽器
+        startGameBtn.addEventListener('click', () => {
+            if (!game.selectedSkill) {
+                showSkillSelection();
+            } else {
+                startGame();
+            }
+        });
+        
+        selectSkillBtn.addEventListener('click', () => {
+            if (game.selectedSkill) {
+                startGame();
+            } else {
+                alert('請選擇一個技能！');
+            }
+        });
+        
+        restartBtn.addEventListener('click', () => {
             initGame();
-        }
+            showSkillSelection();
+        });
         
-        // 页面加载完成后初始化
-        window.addEventListener('load', init);
+        // 鼠標事件
+        let isMouseDown = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        
+        canvas.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            const rect = canvas.getBoundingClientRect();
+            lastMouseX = e.clientX - rect.left;
+            lastMouseY = e.clientY - rect.top;
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            sliceObject(lastMouseX, lastMouseY, x, y);
+            
+            lastMouseX = x;
+            lastMouseY = y;
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+        
+        // 觸摸事件
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            lastMouseX = touch.clientX - rect.left;
+            lastMouseY = touch.clientY - rect.top;
+            isMouseDown = true;
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!isMouseDown) return;
+            
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            sliceObject(lastMouseX, lastMouseY, x, y);
+            
+            lastMouseX = x;
+            lastMouseY = y;
+        });
+        
+        canvas.addEventListener('touchend', () => {
+            isMouseDown = false;
+        });
+        
+        // 窗口大小調整
+        window.addEventListener('resize', () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            // 重新計算第9格高度
+            gridHeight = canvas.height / GRID_ROWS;
+            NINTH_ROW_HEIGHT = gridHeight * 3;
+        });
+        
+        // 初始化遊戲
+        initGame();
+        
+        // 繪製初始畫面
+        drawGridBackground();
+        ctx.fillStyle = '#ff6b8b';
+        ctx.font = '28px Arial Rounded MT Bold';
+        ctx.textAlign = 'center';
+        ctx.fillText('切吧水果', canvas.width / 2, canvas.height / 2 - 30);
+        ctx.fillStyle = '#666';
+        ctx.font = '16px Arial';
+        ctx.fillText('點擊左下角開始遊戲按鈕', canvas.width / 2, canvas.height / 2 + 20);
     </script>
 </body>
 </html>
