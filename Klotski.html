@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4x4 數字華容道 · 簡潔版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #f0f2f5;   /* 柔和底色襯托白色卡片 */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Noto Sans TC', 'Microsoft JhengHei', Roboto, system-ui, sans-serif;
+            padding: 16px;
+            margin: 0;
+        }
+
+        .game-card {
+            background: white;
+            width: fit-content;
+            max-width: 550px;
+            padding: 32px 28px 36px;
+            border-radius: 42px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e9e9e9;
+            transition: all 0.2s;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0 0 24px 0;
+            font-weight: 450;
+            font-size: 2.2rem;
+            letter-spacing: 2px;
+            color: #2c3e50;
+            border-bottom: 2px solid #eaeef2;
+            padding-bottom: 12px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 88px);
+            grid-template-rows: repeat(4, 88px);
+            gap: 10px;
+            background: #fafafa;
+            padding: 18px;
+            border-radius: 28px;
+            box-shadow: inset 0 0 0 1px #dddddd, 0 6px 10px rgba(0,0,0,0.02);
+            margin-bottom: 24px;
+        }
+
+        .tile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 20px;
+            font-size: 2.1rem;
+            font-weight: 550;
+            color: #1e2b37;
+            box-shadow: 0 3px 0 #b0bec5, 0 4px 10px rgba(0, 0, 0, 0.04);
+            transition: all 0.08s ease;
+            cursor: pointer;
+            border: 1px solid #dce4e8;
+            will-change: transform;
+        }
+
+        .tile:active:not(.empty) {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #9aa9b2, 0 4px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .tile.empty {
+            background: #eceff3;
+            box-shadow: inset 0 0 0 1px #ccd7de, 0 2px 6px rgba(0,0,0,0.02);
+            color: transparent;
+            cursor: default;
+            border: 1px solid #d3dee6;
+        }
+
+        .tile.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #a3cfb1;
+            box-shadow: 0 3px 0 #8fbc9f, 0 4px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            padding: 8px 12px 8px 24px;
+            border-radius: 48px;
+            border: 1px solid #dee6ed;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .move-badge {
+            background: #f2f6f9;
+            color: #1e3c5a;
+            padding: 10px 26px;
+            border-radius: 40px;
+            font-weight: 550;
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+            border: 1px solid #d0ddee;
+        }
+
+        button {
+            background: #e6edf6;
+            border: 1px solid #bcccdb;
+            padding: 10px 32px;
+            border-radius: 40px;
+            font-size: 1.4rem;
+            font-weight: 550;
+            color: #1e3b4f;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #b0c2d2, 0 4px 8px rgba(0, 0, 0, 0.02);
+            transition: 0.05s linear;
+            letter-spacing: 1px;
+        }
+
+        button:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #9fb1c0, 0 4px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .win-message {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.9rem;
+            font-weight: 550;
+            color: #0e5c3f;
+            background: #e1f3e7;
+            padding: 10px 16px;
+            border-radius: 48px;
+            opacity: 0;
+            transition: opacity 0.15s;
+            border: 1px solid #a6d0b5;
+        }
+
+        .win-message.show {
+            opacity: 1;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 14px;
+            color: #99aebb;
+            font-size: 1rem;
+            font-weight: 400;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-card">
+        <h1>🕹️ 4x4 華容道</h1>
+
+        <!-- 拼圖棋盤 -->
+        <div class="board" id="board"></div>
+
+        <!-- 底部控制列 -->
+        <div class="info-row">
+            <div class="move-badge" id="moveCounter">📏 0 步</div>
+            <button id="shuffleBtn">🔄 重新洗牌</button>
+        </div>
+
+        <!-- 勝利提示 -->
+        <div id="victoryMessage" class="win-message">✨ 恭喜過關！ ✨</div>
+        <div class="footer-note">點擊數字移動 · 歸位變綠色</div>
+    </div>
+
+    <script>
+        (function() {
+            // 4x4 華容道設定：數字 1~15，0 代表空格
+            const SIZE = 4;
+            const TOTAL_CELLS = SIZE * SIZE;  // 16
+            const EMPTY = 0;
+
+            // 遊戲狀態
+            let tiles = [];               // 一維陣列，順序從上到下、左至右
+            let emptyIndex = 15;           // 空格初始索引 (右下角)
+            let moves = 0;
+            let gameWon = false;
+
+            // DOM 元素
+            const boardEl = document.getElementById('board');
+            const moveSpan = document.getElementById('moveCounter');
+            const victoryMsg = document.getElementById('victoryMessage');
+            const shuffleBtn = document.getElementById('shuffleBtn');
+
+            // 初始化完成狀態 (1~15 順序，0 在最後)
+            function initSolvedState() {
+                tiles = [];
+                for (let i = 1; i < TOTAL_CELLS; i++) {
+                    tiles.push(i);
+                }
+                tiles.push(EMPTY);          // 索引 15 為 0
+                emptyIndex = 15;
+                moves = 0;
+                gameWon = true;              // 目前是完成狀態，但稍後洗牌會重設
+                victoryMsg.classList.remove('show');
+            }
+            initSolvedState();
+
+            // 洗牌 (從還原態執行大量隨機移動，保證可解)
+            function shuffleBoard(stepCount = 200) {
+                // 先回到完成態
+                initSolvedState();    // tiles 為還原態，gameWon = true
+                gameWon = false;
+                victoryMsg.classList.remove('show');
+
+                // 四個方向：上、下、左、右 (空格移動)
+                const dirs = [
+                    { dr: -1, dc: 0 }, // 上 (空格向下)
+                    { dr: 1, dc: 0 },  // 下 (空格向上)
+                    { dr: 0, dc: -1 }, // 左 (空格向右)
+                    { dr: 0, dc: 1 }   // 右 (空格向左)
+                ];
+
+                for (let step = 0; step < stepCount; step++) {
+                    const emptyRow = Math.floor(emptyIndex / SIZE);
+                    const emptyCol = emptyIndex % SIZE;
+
+                    // 收集合法移動：與空格相鄰的格子索引
+                    const validNeighbors = [];
+                    for (const d of dirs) {
+                        const newRow = emptyRow + d.dr;
+                        const newCol = emptyCol + d.dc;
+                        if (newRow >= 0 && newRow < SIZE && newCol >= 0 && newCol < SIZE) {
+                            validNeighbors.push(newRow * SIZE + newCol);
+                        }
+                    }
+
+                    if (validNeighbors.length === 0) continue; // 安全判斷
+
+                    // 隨機挑選一個鄰格與空格交換
+                    const randIdx = validNeighbors[Math.floor(Math.random() * validNeighbors.length)];
+                    // 交換 tiles 中空格與鄰格的值
+                    [tiles[emptyIndex], tiles[randIdx]] = [tiles[randIdx], tiles[emptyIndex]];
+                    emptyIndex = randIdx;   // 空格移動到新位置
+                }
+
+                moves = 0;
+                gameWon = false;
+                updateMoveCounter();
+                renderBoard();
+            }
+
+            // 檢查是否勝利 (所有數字順序正確：索引 0~14 = 1~15，索引15 = 0)
+            function checkVictory() {
+                for (let i = 0; i < TOTAL_CELLS - 1; i++) {
+                    if (tiles[i] !== i + 1) return false;
+                }
+                return tiles[TOTAL_CELLS - 1] === EMPTY;
+            }
+
+            // 處理點擊移動
+            function tryMove(clickedIndex) {
+                if (gameWon) return false;                 // 已通關不回應
+                if (tiles[clickedIndex] === EMPTY) return false; // 點到空格無效
+
+                const emptyRow = Math.floor(emptyIndex / SIZE);
+                const emptyCol = emptyIndex % SIZE;
+                const clickedRow = Math.floor(clickedIndex / SIZE);
+                const clickedCol = clickedIndex % SIZE;
+
+                const rowDiff = Math.abs(emptyRow - clickedRow);
+                const colDiff = Math.abs(emptyCol - clickedCol);
+
+                // 相鄰條件：曼哈頓距離為1
+                if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
+                    // 交換空格與點擊的數字
+                    [tiles[emptyIndex], tiles[clickedIndex]] = [tiles[clickedIndex], tiles[emptyIndex]];
+                    emptyIndex = clickedIndex;
+                    moves++;
+
+                    updateMoveCounter();
+
+                    if (checkVictory()) {
+                        gameWon = true;
+                        victoryMsg.classList.add('show');
+                    } else {
+                        victoryMsg.classList.remove('show');
+                    }
+
+                    renderBoard();
+                    return true;
+                }
+                return false;
+            }
+
+            // 更新步數顯示
+            function updateMoveCounter() {
+                moveSpan.innerText = `📏 ${moves} 步`;
+            }
+
+            // 繪製棋盤
+            function renderBoard() {
+                boardEl.innerHTML = '';
+
+                tiles.forEach((value, index) => {
+                    const tileDiv = document.createElement('div');
+                    tileDiv.className = 'tile';
+
+                    if (value === EMPTY) {
+                        tileDiv.classList.add('empty');
+                    } else {
+                        tileDiv.textContent = value;
+                    }
+
+                    // 標記正確位置的數字 (金色→改為清爽綠色)
+                    if (value !== EMPTY && value === index + 1) {
+                        tileDiv.classList.add('correct');
+                    }
+
+                    // 綁定點擊事件
+                    tileDiv.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        tryMove(index);
+                    });
+
+                    boardEl.appendChild(tileDiv);
+                });
+            }
+
+            // 洗牌按鈕事件
+            shuffleBtn.addEventListener('click', () => {
+                shuffleBoard(210);  // 隨機步數多一點讓牌更亂
+            });
+
+            // 初次啟動：先顯示完成畫面0.1秒再洗牌，讓使用者知道原貌，但直接洗牌更直覺
+            window.addEventListener('load', () => {
+                // 為了讓使用者開局就是可玩狀態，直接洗牌
+                shuffleBoard(200);
+            });
+
+            // 初始化顯示
+            renderBoard();
+            updateMoveCounter();
+        })();
+    </script>
+</body>
+</html>

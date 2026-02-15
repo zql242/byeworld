@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>井字過三關 · 白色視覺 · 聰明電腦</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        body {
+            background: #f5f5f7;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .game-container {
+            background: #ffffff;
+            border-radius: 3rem;
+            padding: 2.5rem 2rem 2.5rem 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.06);
+            border: 1px solid #e9e9ed;
+        }
+        h1 {
+            text-align: center;
+            margin: 0 0 0.8rem 0;
+            font-weight: 500;
+            font-size: 2.8rem;
+            letter-spacing: 6px;
+            color: #2d3e50;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            word-break: keep-all;
+        }
+        h1 small {
+            font-size: 1.2rem;
+            display: block;
+            color: #5f7d9c;
+            letter-spacing: 3px;
+            font-weight: 300;
+            margin-top: -5px;
+        }
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1.2rem;
+            margin: 1rem 0 1.2rem 0;
+        }
+        .mode-btn {
+            background: #eaeef3;
+            border: none;
+            color: #2b4b6f;
+            font-size: 1.25rem;
+            font-weight: 600;
+            padding: 0.5rem 1.8rem;
+            border-radius: 40px;
+            box-shadow: 0 4px 0 #b0c1d0, 0 4px 12px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: 0.05s linear;
+            border-bottom: 2px solid #cbdae6;
+            letter-spacing: 1px;
+        }
+        .mode-btn.active {
+            background: #2b4b6f;
+            color: white;
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #1a2f44, 0 6px 14px rgba(0,0,0,0.1);
+            border-bottom-color: #9fb8d0;
+        }
+        .mode-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #b0c1d0;
+        }
+        .turn-indicator {
+            background: #f0f4fa;
+            border-radius: 60px;
+            padding: 0.6rem 2rem;
+            margin: 1.5rem 0.5rem 1.8rem 0.5rem;
+            text-align: center;
+            box-shadow: inset 0 2px 5px #d9e2ec, 0 10px 15px -8px #a2b8cc;
+            border-bottom: 2px solid #cbdae6;
+        }
+        .turn-text {
+            font-size: 1.9rem;
+            font-weight: 600;
+            color: #1f3447;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        .turn-icon {
+            display: inline-flex;
+            background: #ffffff;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            box-shadow: 0 0 0 2px #b5c9de, inset 0 0 0 2px #ffffff;
+            color: #2b4b6f;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            background: transparent;
+            margin: 0 auto;
+            width: fit-content;
+            padding: 12px;
+        }
+        .cell {
+            width: 105px;
+            height: 105px;
+            background: #f8faff;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            font-weight: 550;
+            color: #1f3447;
+            text-shadow: 0 2px 5px rgba(99, 128, 160, 0.2);
+            box-shadow: 0 8px 0 #c0cfdf, 0 8px 15px rgba(0, 0, 0, 0.05), inset 0 -2px 4px #deecfb;
+            transition: all 0.08s linear;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 3px solid #d1e0ee;
+        }
+        .cell:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #c0cfdf, 0 5px 12px rgba(0,0,0,0.1);
+        }
+        .cell.disabled,
+        .cell.won-cell {
+            cursor: default;
+            pointer-events: none;
+            filter: brightness(0.98);
+            transform: translateY(3px);
+            box-shadow: 0 4px 0 #c0cfdf;
+        }
+        .cell.won-cell {
+            background: #d7f0e2;
+            border-bottom: 3px solid #90b8a8;
+            box-shadow: 0 4px 0 #7fa293, 0 0 18px #c2eedb;
+            color: #1d543c;
+        }
+        .footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding: 0 0.5rem;
+        }
+        .score-card {
+            background: #eef3f9;
+            border-radius: 50px;
+            padding: 0.5rem 1.6rem;
+            display: flex;
+            gap: 2rem;
+            color: #1f3447;
+            font-weight: 600;
+            font-size: 1.3rem;
+            box-shadow: inset 0 2px 6px #ccdbea;
+            border: 1px solid #d0dfee;
+        }
+        .score-card span {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-left: 8px;
+            color: #2b4b6f;
+        }
+        .reset-btn {
+            background: #e0e9f3;
+            border: none;
+            color: #1f3447;
+            font-size: 1.6rem;
+            padding: 0.5rem 2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            box-shadow: 0 5px 0 #b0c4d8, 0 5px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: 0.07s linear;
+            border-bottom: 2px solid #c4d3e5;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .reset-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #b0c4d8, 0 5px 12px rgba(0,0,0,0.1);
+        }
+        .message {
+            font-size: 1.3rem;
+            background: #edf2f8;
+            padding: 0.5rem 2rem;
+            border-radius: 40px;
+            color: #1f3f5c;
+            border: 1px solid #c9d9eb;
+        }
+        .computer-note {
+            color: #4f6b87;
+            font-size: 0.95rem;
+            margin-left: 10px;
+            opacity: 0.9;
+            text-align: center;
+            margin-top: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>◯ 井字過三關 <small>· 白淨風格 · 強化電腦 ·</small></h1>
+
+        <!-- 模式切換 -->
+        <div class="mode-selector">
+            <button class="mode-btn active" id="modeTwoPlayer">👥 雙人</button>
+            <button class="mode-btn" id="modeVsComputer">🤖 電腦</button>
+        </div>
+
+        <div class="turn-indicator">
+            <div class="turn-text" id="turnDisplay">
+                <span class="turn-icon" id="turnIcon">◯</span>
+                <span id="turnMessage">玩家 ◯ 的回合</span>
+            </div>
+        </div>
+
+        <div class="board" id="board">
+            <!-- 由 JS 產生格子 -->
+        </div>
+
+        <div class="footer">
+            <div class="score-card">
+                <div>◯ <span id="scoreO">0</span></div>
+                <div>⨯ <span id="scoreX">0</span></div>
+            </div>
+            <button class="reset-btn" id="resetBtn">↻ 重來</button>
+            <div class="message" id="statusMessage">⚡ 輪到 ◯</div>
+        </div>
+        <div class="computer-note" id="computerNote"></div>
+    </div>
+
+    <script>
+        (function() {
+            // ---------- 狀態 ----------
+            let board = Array(9).fill(null);
+            let currentPlayer = 'O';                    // O 先手 (圈圈先)
+            let gameActive = true;
+            let winnerInfo = null;                       // { winner: 'X'|'O'|'draw', line: array }
+
+            // 計分
+            let scoreO = 0;   // 圈圈
+            let scoreX = 0;   // 叉叉
+
+            // 模式: 'twoPlayer' 或 'vsComputer'
+            let gameMode = 'twoPlayer';
+
+            // DOM 元素
+            const boardEl = document.getElementById('board');
+            const turnIcon = document.getElementById('turnIcon');
+            const turnMessage = document.getElementById('turnMessage');
+            const scoreOEl = document.getElementById('scoreO');
+            const scoreXEl = document.getElementById('scoreX');
+            const statusMessageEl = document.getElementById('statusMessage');
+            const resetBtn = document.getElementById('resetBtn');
+            const modeTwoPlayer = document.getElementById('modeTwoPlayer');
+            const modeVsComputer = document.getElementById('modeVsComputer');
+            const computerNote = document.getElementById('computerNote');
+
+            // 輔助: 更新計分顯示
+            function updateScoreUI() {
+                scoreOEl.textContent = scoreO;
+                scoreXEl.textContent = scoreX;
+            }
+
+            // 清除勝利高亮
+            function removeAllWonClass() {
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.classList.remove('won-cell');
+                });
+            }
+
+            // 高亮贏家格子
+            function highlightWinningCells() {
+                if (!winnerInfo || !winnerInfo.line) return;
+                winnerInfo.line.forEach(index => {
+                    const cell = document.querySelector(`.cell[data-index='${index}']`);
+                    if (cell) cell.classList.add('won-cell');
+                });
+            }
+
+            // 更新棋盤 UI
+            function renderBoard() {
+                const cells = document.querySelectorAll('.cell');
+                cells.forEach((cell, i) => {
+                    cell.textContent = board[i] || '';
+                });
+
+                removeAllWonClass();
+                if (winnerInfo && winnerInfo.line) {
+                    highlightWinningCells();
+                }
+
+                cells.forEach(cell => {
+                    const index = cell.dataset.index;
+                    const isUsed = board[index] !== null;
+                    if (gameActive && !winnerInfo && !isUsed) {
+                        cell.classList.remove('disabled');
+                    } else {
+                        cell.classList.add('disabled');
+                    }
+                });
+            }
+
+            // 更新上方 turn 顯示
+            function updateTurnUI() {
+                if (!gameActive) {
+                    if (winnerInfo) {
+                        if (winnerInfo.winner === 'draw') {
+                            turnIcon.textContent = '🤝';
+                            turnMessage.textContent = '平手 ～ 再來一局';
+                        } else {
+                            turnIcon.textContent = winnerInfo.winner === 'O' ? '◯' : '⨯';
+                            turnMessage.textContent = `玩家 ${winnerInfo.winner} 贏得此局！`;
+                        }
+                    }
+                    return;
+                }
+
+                turnIcon.textContent = currentPlayer === 'O' ? '◯' : '⨯';
+                if (gameMode === 'vsComputer') {
+                    if (currentPlayer === 'O') {
+                        turnMessage.textContent = `你的回合 (◯)`;
+                    } else {
+                        turnMessage.textContent = `電腦思考中 (⨯) ...`;
+                    }
+                } else {
+                    turnMessage.textContent = `玩家 ${currentPlayer} 的回合`;
+                }
+            }
+
+            // 檢查贏家 / 平手
+            function checkGameStatus() {
+                const lines = [
+                    [0,1,2], [3,4,5], [6,7,8],
+                    [0,3,6], [1,4,7], [2,5,8],
+                    [0,4,8], [2,4,6]
+                ];
+
+                for (let line of lines) {
+                    const [a,b,c] = line;
+                    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                        const winner = board[a];
+                        winnerInfo = { winner, line };
+                        gameActive = false;
+
+                        if (winner === 'O') scoreO += 1;
+                        else scoreX += 1;
+                        updateScoreUI();
+
+                        renderBoard();
+                        updateTurnUI();
+                        statusMessageEl.textContent = `🏆 玩家 ${winner} 三連線！`;
+                        computerNote.textContent = gameMode === 'vsComputer' ? (winner === 'O' ? '🎉 你贏了！' : '🤖 電腦贏了...') : '';
+                        return;
+                    }
+                }
+
+                const allFilled = board.every(cell => cell !== null);
+                if (allFilled) {
+                    winnerInfo = { winner: 'draw', line: null };
+                    gameActive = false;
+                    renderBoard();
+                    updateTurnUI();
+                    statusMessageEl.textContent = `🤍 平局，勢均力敵`;
+                    computerNote.textContent = gameMode === 'vsComputer' ? '🤝 平手' : '';
+                    return;
+                }
+
+                winnerInfo = null;
+                removeAllWonClass();
+                statusMessageEl.textContent = gameActive 
+                    ? (gameMode === 'vsComputer' 
+                        ? (currentPlayer === 'O' ? '👤 你的回合' : '🤖 電腦計算中...')
+                        : `⚡ 輪到 ${currentPlayer}`)
+                    : '';
+            }
+
+            // ---------- 強化電腦 AI (無法輕易擊敗) ----------
+            function getBestComputerMove() {
+                // 1. 若電腦 (X) 可以直接贏，下該位置
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === null) {
+                        board[i] = 'X';
+                        if (checkWinner('X')) {
+                            board[i] = null; // 復原
+                            return i;
+                        }
+                        board[i] = null;
+                    }
+                }
+
+                // 2. 若玩家 (O) 下一步可以贏，必須阻擋
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === null) {
+                        board[i] = 'O';
+                        if (checkWinner('O')) {
+                            board[i] = null;
+                            return i;
+                        }
+                        board[i] = null;
+                    }
+                }
+
+                // 3. 優先佔據中心
+                if (board[4] === null) return 4;
+
+                // 4. 佔據對角 (如果角落空的)
+                const corners = [0, 2, 6, 8];
+                const availableCorners = corners.filter(i => board[i] === null);
+                if (availableCorners.length > 0) {
+                    return availableCorners[Math.floor(Math.random() * availableCorners.length)];
+                }
+
+                // 5. 其餘隨便 (邊)
+                const others = [1, 3, 5, 7].filter(i => board[i] === null);
+                if (others.length > 0) {
+                    return others[Math.floor(Math.random() * others.length)];
+                }
+
+                return null; // 無空位 (理論上不發生)
+            }
+
+            // 輔助：檢查當前棋盤某玩家是否連線 (不改變board)
+            function checkWinner(player) {
+                const lines = [
+                    [0,1,2],[3,4,5],[6,7,8],
+                    [0,3,6],[1,4,7],[2,5,8],
+                    [0,4,8],[2,4,6]
+                ];
+                for (let line of lines) {
+                    if (board[line[0]] === player && board[line[1]] === player && board[line[2]] === player) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // 電腦下棋 (使用強化AI)
+            function computerMove() {
+                if (!gameActive || winnerInfo) return;
+
+                // 延遲一點，像在思考
+                setTimeout(() => {
+                    if (!gameActive || winnerInfo) return; 
+
+                    // 找出最佳位置
+                    const moveIndex = getBestComputerMove();
+                    if (moveIndex === null) return; // 無空格 (應平手)
+
+                    if (board[moveIndex] !== null) return; // 安全檢查
+
+                    // 電腦下 X
+                    board[moveIndex] = 'X';
+                    renderBoard();
+
+                    checkGameStatus();
+
+                    if (gameActive && !winnerInfo) {
+                        currentPlayer = 'O';   // 換回玩家
+                        updateTurnUI();
+                        statusMessageEl.textContent = '👤 你的回合';
+                    } else {
+                        updateTurnUI();
+                    }
+                    renderBoard();
+                }, 280);
+            }
+
+            // 處理格子點擊 (玩家)
+            function handleCellClick(e) {
+                const cell = e.currentTarget;
+                const index = cell.dataset.index;
+
+                if (!gameActive || winnerInfo || board[index] !== null) return;
+                if (gameMode === 'vsComputer' && currentPlayer === 'X') return; // 電腦回合不能下
+
+                // 玩家下子 (O)
+                board[index] = currentPlayer;
+                renderBoard();
+                checkGameStatus();
+
+                if (gameActive && !winnerInfo) {
+                    if (gameMode === 'twoPlayer') {
+                        currentPlayer = currentPlayer === 'O' ? 'X' : 'O';
+                        updateTurnUI();
+                    } else { 
+                        // vsComputer: 玩家O下完 -> 換電腦 X
+                        currentPlayer = 'X';
+                        updateTurnUI();
+                        statusMessageEl.textContent = '🤖 電腦思考中...';
+                        computerNote.textContent = '🤖 電腦回合';
+                        computerMove();
+                    }
+                } else {
+                    if (gameMode === 'vsComputer' && winnerInfo) {
+                        if (winnerInfo.winner === 'O') computerNote.textContent = '🎉 你贏了！';
+                        else if (winnerInfo.winner === 'X') computerNote.textContent = '💻 電腦贏了';
+                        else computerNote.textContent = '🤝 平手';
+                    }
+                }
+                renderBoard();
+                if (gameActive && gameMode === 'twoPlayer') updateTurnUI();
+            }
+
+            // 重置遊戲
+            function resetGame() {
+                board = Array(9).fill(null);
+                currentPlayer = 'O';
+                gameActive = true;
+                winnerInfo = null;
+
+                removeAllWonClass();
+                renderBoard();
+                updateTurnUI();
+                statusMessageEl.textContent = gameMode === 'vsComputer' ? '👤 你的回合 (◯)' : '⚡ 輪到 ◯';
+                computerNote.textContent = gameMode === 'vsComputer' ? '👆 點格子下棋 (電腦強化)' : '';
+            }
+
+            // 切換模式
+            function setMode(mode) {
+                gameMode = mode;
+                modeTwoPlayer.classList.remove('active');
+                modeVsComputer.classList.remove('active');
+                if (mode === 'twoPlayer') {
+                    modeTwoPlayer.classList.add('active');
+                    computerNote.textContent = '';
+                } else {
+                    modeVsComputer.classList.add('active');
+                    computerNote.textContent = '👆 你持 ◯ · 電腦現在很聰明';
+                }
+                resetGame();
+            }
+
+            // 產生棋盤格
+            function createBoardCells() {
+                boardEl.innerHTML = '';
+                for (let i = 0; i < 9; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.index = i;
+                    cell.addEventListener('click', handleCellClick);
+                    boardEl.appendChild(cell);
+                }
+            }
+
+            // 初始化
+            function initGame() {
+                createBoardCells();
+                scoreO = 0;
+                scoreX = 0;
+                updateScoreUI();
+                resetGame();
+            }
+
+            modeTwoPlayer.addEventListener('click', () => setMode('twoPlayer'));
+            modeVsComputer.addEventListener('click', () => setMode('vsComputer'));
+            resetBtn.addEventListener('click', resetGame);
+
+            initGame();
+        })();
+    </script>
+</body>
+</html>

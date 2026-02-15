@@ -134,12 +134,32 @@
             pointer-events: none;
         }
         
-        /* 陷阱標記 - 紅色，但不用文字說明 */
+        /* 陷阱標記 - 紅色，疊加數字顯示數量 */
         .cell.trap-set {
             background: #ffcdcd !important;
             border-color: #ff6b6b !important;
+            position: relative;
         }
         
+        .cell.trap-set::after {
+            content: attr(data-count);
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #ff4444;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 2px;
+        }
+        
+        /* 人類選手錶（右邊） */
         #rolexGrid .cell {
             background: #d9e2e8;
             cursor: pointer;
@@ -268,8 +288,8 @@
     </div>
 
     <div class="player-tags">
-        <span class="tag">👛 Chanel</span>
-        <span class="tag right">⌚ Rolex</span>
+        <span class="tag">🛍️ Chanel (電腦)</span>
+        <span class="tag right">⌚️ Rolex (你)</span>
     </div>
 
     <div class="lives-row">
@@ -280,11 +300,11 @@
     <div class="boards">
         <div class="board">
             <div class="grid" id="chanelGrid"></div>
-            <div class="board-footer">👆 你的棋盤</div>
+            <div class="board-footer">🛍️ Chanel 的包包 (電腦先選)</div>
         </div>
         <div class="board">
             <div class="grid" id="rolexGrid"></div>
-            <div class="board-footer">👆 點擊布置陷阱</div>
+            <div class="board-footer">⌚️ 你的手錶 (你後選)</div>
         </div>
     </div>
 
@@ -303,8 +323,8 @@
         const POS = ['A1','A2','A3','B1','B2','B3','C1','C2','C3'];
         const INIT = 3;
 
-        const BAG_EMOJI = '👛';
-        const WATCH_EMOJI = '⌚';
+        const BAG_EMOJI = '🛍️';
+        const WATCH_EMOJI = '⌚️';
 
         const BAG_MAP = {};
         const WATCH_MAP = {};
@@ -313,17 +333,17 @@
             WATCH_MAP[pos] = WATCH_EMOJI;
         });
 
-        const P1 = 'computerPoison';
-        const P2 = 'humanPoison';
-        const P3 = 'battle';
+        const P1 = 'computerPoison';  // 電腦在你的手錶放炸彈
+        const P2 = 'humanPoison';     // 你在電腦的包包放炸彈
+        const P3 = 'battle';          // 對決
 
         let stage = P1;
         let chanelMoney = INIT, rolexMoney = INIT;
-        let trapForChanel = new Set();
-        let trapForRolex = new Set();
-        let chanelUsed = new Set();
-        let rolexUsed = new Set();
-        let humanTurn = true;
+        let trapOnRolexWatches = new Set();  // 電腦在你手錶放的炸彈 (右邊)
+        let trapOnChanelBags = new Map();    // 你在電腦包包放的炸彈 (左邊) - 用 Map 存數量
+        let chanelBagsUsed = new Set();      // 電腦已選的包包 (左邊)
+        let rolexWatchesUsed = new Set();    // 你已選的手錶 (右邊)
+        let computerTurn = true;              // true = 電腦先選左邊包包, false = 你選手錶
         let gameOver = false;
 
         const chanelGrid = document.getElementById('chanelGrid');
@@ -356,7 +376,17 @@
             rolexMoneySpan.innerText = '💰'.repeat(rolexMoney);
         }
 
+        // 計算總炸彈數量
+        function getTotalBombs() {
+            let total = 0;
+            for (let count of trapOnChanelBags.values()) {
+                total += count;
+            }
+            return total;
+        }
+
         function draw() {
+            // 左邊：Chanel 的包包 (電腦先選)
             chanelGrid.innerHTML = '';
             POS.forEach(p => {
                 let cell = document.createElement('div');
@@ -365,19 +395,52 @@
                 cell.dataset.board = 'chanel';
                 
                 let mainEmoji = BAG_MAP[p];
-                if (stage === P3 && chanelUsed.has(p) && trapForChanel.has(p)) {
-                    mainEmoji = '💣';
-                } else if (stage === P3 && chanelUsed.has(p)) {
-                    mainEmoji = '✅';
+                
+                // 布置階段：顯示你在電腦包包放的陷阱 (紅色)
+                if (stage === P2) {
+                    let bombCount = trapOnChanelBags.get(p) || 0;
+                    if (bombCount > 0) {
+                        cell.classList.add('trap-set');
+                        cell.dataset.count = bombCount;
+                    } else {
+                        cell.classList.remove('trap-set');
+                        delete cell.dataset.count;
+                    }
+                }
+                
+                // 戰鬥階段顯示結果
+                if (stage === P3) {
+                    cell.classList.remove('trap-set');
+                    delete cell.dataset.count;
+                    
+                    // 如果這個格子有炸彈且被電腦選中
+                    if (chanelBagsUsed.has(p)) {
+                        let bombCount = trapOnChanelBags.get(p) || 0;
+                        if (bombCount > 0) {
+                            mainEmoji = '💣';
+                            // 如果有多個炸彈，顯示數量
+                            if (bombCount > 1) {
+                                cell.dataset.count = bombCount;
+                            }
+                        } else {
+                            mainEmoji = '✅';
+                        }
+                    }
                 }
                 
                 cell.textContent = mainEmoji;
                 
-                if (stage === P3 && chanelUsed.has(p)) cell.classList.add('disabled');
-                cell.style.background = '';
+                // 戰鬥階段之後不可點
+                if (stage === P3) {
+                    cell.style.pointerEvents = 'none';
+                } else {
+                    cell.style.pointerEvents = 'auto';
+                }
+                
                 chanelGrid.appendChild(cell);
             });
 
+            // 右邊：Rolex 的手錶 (你後選)
             rolexGrid.innerHTML = '';
             POS.forEach(p => {
                 let cell = document.createElement('div');
@@ -386,41 +449,28 @@
                 cell.dataset.board = 'rolex';
                 
                 let mainEmoji = WATCH_MAP[p];
-                
-                if (stage === P2) {
-                    if (trapForRolex.has(p)) {
-                        cell.classList.add('trap-set');
-                    } else {
-                        cell.classList.remove('trap-set');
-                    }
-                }
-                
-                if (stage === P3) {
-                    cell.classList.remove('trap-set');
-                    if (rolexUsed.has(p) && trapForRolex.has(p)) {
-                        mainEmoji = '💣';
-                    } else if (rolexUsed.has(p)) {
-                        mainEmoji = '✅';
-                    }
+                if (stage === P3 && rolexWatchesUsed.has(p) && trapOnRolexWatches.has(p)) {
+                    mainEmoji = '💣';
+                } else if (stage === P3 && rolexWatchesUsed.has(p)) {
+                    mainEmoji = '✅';
                 }
                 
                 cell.textContent = mainEmoji;
                 
-                if (stage === P3) {
-                    cell.style.pointerEvents = 'none';
-                } else {
-                    cell.style.pointerEvents = 'auto';
-                }
-                
+                if (stage === P3 && rolexWatchesUsed.has(p)) cell.classList.add('disabled');
+                cell.style.background = '';
                 rolexGrid.appendChild(cell);
             });
         }
 
         function resetAll() {
             chanelMoney = INIT; rolexMoney = INIT;
-            trapForChanel.clear(); trapForRolex.clear();
-            chanelUsed.clear(); rolexUsed.clear();
-            gameOver = false; humanTurn = true;
+            trapOnRolexWatches.clear(); 
+            trapOnChanelBags.clear();
+            chanelBagsUsed.clear(); 
+            rolexWatchesUsed.clear();
+            gameOver = false; 
+            computerTurn = true;  // 電腦先手
             stage = P1;
             updateMoney(); draw(); updateMessage();
         }
@@ -428,14 +478,18 @@
         function updateMessage() {
             if (gameOver) return;
             if (stage === P1) {
-                msg.innerHTML = '🤖 Rolex 偷偷布置陷阱 · 點「下一步」';
-                phaseEl.innerText = '⚙️ 階段 1/3：電腦布置';
+                msg.innerHTML = '🤖 電腦 Chanel 正在你的手錶放炸彈 · 點「下一步」';
+                phaseEl.innerText = '⚙️ 階段 1/3：電腦放炸彈';
             } else if (stage === P2) {
-                msg.innerHTML = '🙈 Rolex 閉眼 · 請在右邊棋盤點選 3 個 ⌚ 布置陷阱';
-                phaseEl.innerText = '⚙️ 階段 2/3：人類布置陷阱';
+                let total = getTotalBombs();
+                msg.innerHTML = `🛍️ 你在電腦的包包放炸彈 · 點左邊 🛍️ 選炸彈 (可重複) 目前 ${total}/3`;
+                phaseEl.innerText = '⚙️ 階段 2/3：你放炸彈';
             } else if (stage === P3) {
-                if (humanTurn) msg.innerHTML = '👛 你的回合 · 點左邊 👛 選包包';
-                else msg.innerHTML = '⌚ 電腦回合 · 思考中';
+                if (computerTurn) {
+                    msg.innerHTML = '🛍️ 電腦回合 · Chanel 先選包包 (可能會踩到你的炸彈)';
+                } else {
+                    msg.innerHTML = '⌚️ 你的回合 · 點右邊 ⌚️ 選手錶 (小心電腦的炸彈)';
+                }
                 phaseEl.innerText = '⚔️ 階段 3/3：對決';
             }
         }
@@ -446,41 +500,52 @@
                 let j = Math.floor(Math.random() * (i + 1));
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
-            trapForChanel = new Set(shuffled.slice(0, 3));
+            trapOnRolexWatches = new Set(shuffled.slice(0, 3));
+            console.log('電腦在你手錶放的炸彈:', trapOnRolexWatches);
         }
 
         function checkWin() {
             if (chanelMoney <= 0) {
                 gameOver = true;
-                msg.innerHTML = '🏆 Rolex 勝利！ Chanel 破產了 💸';
-                phaseEl.innerText = '💀 遊戲結束';
+                msg.innerHTML = '🏆 你 (Rolex) 勝利！ 電腦破產了 💸';
+                phaseEl.innerText = '🎉 遊戲結束';
                 return true;
             } else if (rolexMoney <= 0) {
                 gameOver = true;
-                msg.innerHTML = '🏆 Chanel 勝利！ Rolex 破產了 💸';
-                phaseEl.innerText = '🎉 遊戲結束';
+                msg.innerHTML = '🏆 電腦 (Chanel) 勝利！ 你破產了 💸';
+                phaseEl.innerText = '💀 遊戲結束';
                 return true;
             }
             return false;
         }
 
+        // 電腦回合：選左邊 Chanel 的包包 (電腦先手)
         function computerMove() {
-            if (gameOver || stage !== P3 || humanTurn) return;
+            if (gameOver || stage !== P3 || !computerTurn) return;
 
-            let available = POS.filter(p => !rolexUsed.has(p));
+            let available = POS.filter(p => !chanelBagsUsed.has(p));
             if (available.length === 0) return;
 
             let pick = available[Math.floor(Math.random() * available.length)];
-            rolexUsed.add(pick);
+            chanelBagsUsed.add(pick);
 
-            let trapped = trapForRolex.has(pick);
-            if (trapped) {
-                rolexMoney--;
-                showPopup('💣', '炸彈！', '損失 1💰');
-                msg.innerHTML = `⌚ Rolex 選了 ⌚ · 💣 炸彈！損失 1💰<br>💰 還剩 ${rolexMoney} 次機會`;
+            let bombCount = trapOnChanelBags.get(pick) || 0;
+            let totalDamage = 0;
+            
+            // 計算炸彈傷害
+            if (bombCount > 0) {
+                totalDamage = bombCount;
+                chanelMoney -= bombCount;
+                if (chanelMoney < 0) chanelMoney = 0;
+            }
+            
+            if (bombCount > 0) {
+                let bombText = bombCount > 1 ? `💣💣 ${bombCount}個炸彈！` : '💣 炸彈！';
+                showPopup('💣', bombText, `損失 ${bombCount}💰`);
+                msg.innerHTML = `🛍️ 電腦選了 🛍️ · ${bombText}損失 ${bombCount}💰<br>💰 Chanel 還剩 ${chanelMoney} 次機會`;
             } else {
                 showPopup('✅', '平安過關', '');
-                msg.innerHTML = `⌚ Rolex 選了 ⌚ · ✅ 平安過關<br>💰 還剩 ${rolexMoney} 次機會`;
+                msg.innerHTML = `🛍️ 電腦選了 🛍️ · ✅ 平安過關<br>💰 Chanel 還剩 ${chanelMoney} 次機會`;
             }
 
             draw();
@@ -488,7 +553,7 @@
 
             if (checkWin()) { draw(); return; }
 
-            humanTurn = true;
+            computerTurn = false;  // 換你選手錶
             updateMessage();
         }
 
@@ -504,69 +569,81 @@
             let pos = cell.dataset.pos;
 
             if (stage === P1) {
-                msg.innerHTML = '⏳ 先點「下一步」讓電腦布置';
+                msg.innerHTML = '⏳ 先點「下一步」讓電腦放炸彈';
                 return;
             }
 
+            // 階段2: 你在電腦的包包放炸彈 (點左邊)
             if (stage === P2) {
-                if (board !== 'rolex') {
-                    msg.innerHTML = '❌ 請點右邊 (Rolex 的棋盤) 布置陷阱';
+                if (board !== 'chanel') {
+                    msg.innerHTML = '❌ 請點左邊 (Chanel 的包包) 放炸彈';
                     return;
                 }
-                if (trapForRolex.size >= 3) {
-                    msg.innerHTML = '✅ 已選滿 3 個陷阱 · 點「下一步」';
+                
+                let total = getTotalBombs();
+                if (total >= 3) {
+                    msg.innerHTML = '✅ 已選滿 3 個炸彈 · 點「下一步」';
                     return;
                 }
-                if (trapForRolex.has(pos)) {
-                    msg.innerHTML = '⚠️ 已經選過了';
-                    return;
-                }
-                trapForRolex.add(pos);
+                
+                // 增加炸彈數量 (可重複)
+                let currentCount = trapOnChanelBags.get(pos) || 0;
+                trapOnChanelBags.set(pos, currentCount + 1);
+                
+                // 更新顯示
                 cell.classList.add('trap-set');
-                msg.innerHTML = `📍 陷阱設置 (${trapForRolex.size}/3) 給 Rolex`;
-                if (trapForRolex.size === 3) {
-                    msg.innerHTML = '🎯 陷阱完成 · 點「下一步」對決';
+                cell.dataset.count = currentCount + 1;
+                
+                let newTotal = getTotalBombs();
+                msg.innerHTML = `💣 炸彈設置 (${newTotal}/3) 給電腦`;
+                if (newTotal === 3) {
+                    msg.innerHTML = '🎯 炸彈完成 · 點「下一步」對決';
                 }
                 return;
             }
 
+            // 階段3: 對決
             if (stage === P3) {
-                if (!humanTurn) {
-                    msg.innerHTML = '⌚ 電腦回合中';
-                    return;
+                // 你的回合：選右邊的手錶 (你後選)
+                if (!computerTurn) {
+                    if (board !== 'rolex') {
+                        msg.innerHTML = '❌ 請點右邊 (你的手錶)';
+                        return;
+                    }
+                    if (rolexWatchesUsed.has(pos)) {
+                        msg.innerHTML = '⌛ 已經選過這個手錶了';
+                        return;
+                    }
+
+                    rolexWatchesUsed.add(pos);
+                    let trapped = trapOnRolexWatches.has(pos);
+
+                    if (trapped) {
+                        rolexMoney--;
+                        showPopup('💣', '炸彈！', '損失 1💰');
+                        msg.innerHTML = `⌚️ 你選了 ⌚️ · 💣 炸彈！損失 1💰<br>💰 你還剩 ${rolexMoney} 次機會`;
+                    } else {
+                        showPopup('✅', '平安過關', '');
+                        msg.innerHTML = `⌚️ 你選了 ⌚️ · ✅ 平安過關<br>💰 你還剩 ${rolexMoney} 次機會`;
+                    }
+
+                    draw();
+                    updateMoney();
+
+                    if (checkWin()) { draw(); return; }
+
+                    // 換電腦選包包
+                    computerTurn = true;
+                    updateMessage();
+
+                    setTimeout(() => {
+                        if (!gameOver && stage === P3 && computerTurn) computerMove();
+                    }, 600);
+                } 
+                // 電腦回合：你不能點
+                else {
+                    msg.innerHTML = '🛍️ 電腦回合中 · 請稍候...';
                 }
-                if (board !== 'chanel') {
-                    msg.innerHTML = '❌ 只能點自己的棋盤 (左邊)';
-                    return;
-                }
-                if (chanelUsed.has(pos)) {
-                    msg.innerHTML = '⌛ 已經選過';
-                    return;
-                }
-
-                chanelUsed.add(pos);
-                let trapped = trapForChanel.has(pos);
-
-                if (trapped) {
-                    chanelMoney--;
-                    showPopup('💣', '炸彈！', '損失 1💰');
-                    msg.innerHTML = `👛 你選了 👛 · 💣 炸彈！損失 1💰<br>💰 還剩 ${chanelMoney} 次機會`;
-                } else {
-                    showPopup('✅', '平安過關', '');
-                    msg.innerHTML = `👛 你選了 👛 · ✅ 平安過關<br>💰 還剩 ${chanelMoney} 次機會`;
-                }
-
-                draw();
-                updateMoney();
-
-                if (checkWin()) { draw(); return; }
-
-                humanTurn = false;
-                updateMessage();
-
-                setTimeout(() => {
-                    if (!gameOver && stage === P3 && !humanTurn) computerMove();
-                }, 600);
             }
         }
 
@@ -578,20 +655,26 @@
                 stage = P2;
                 draw();
                 updateMessage();
-                msg.innerHTML = '🙈 換你布置 · 在右邊棋盤選 3 個 ⌚ 當陷阱';
+                msg.innerHTML = '🙈 換你在電腦包包放炸彈 · 點左邊 🛍️ 選炸彈 (可重複)';
             }
             else if (stage === P2) {
-                if (trapForRolex.size !== 3) {
-                    msg.innerHTML = `⚠️ 還需要 ${3 - trapForRolex.size} 個陷阱 (點右邊)`;
+                let total = getTotalBombs();
+                if (total !== 3) {
+                    msg.innerHTML = `⚠️ 需要剛好 3 個炸彈 (目前 ${total}/3)`;
                     return;
                 }
                 stage = P3;
-                humanTurn = true;
+                computerTurn = true;  // 電腦先手
                 draw();
                 updateMessage();
+                
+                // 電腦先開始
+                setTimeout(() => {
+                    if (!gameOver && stage === P3 && computerTurn) computerMove();
+                }, 600);
             }
             else if (stage === P3) {
-                msg.innerHTML = humanTurn ? '👛 請點左邊 👛' : '⌚ 電腦思考中';
+                msg.innerHTML = computerTurn ? '🛍️ 電腦回合' : '⌚️ 你的回合 (點右邊手錶)';
             }
         }
 

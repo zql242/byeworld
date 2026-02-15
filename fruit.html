@@ -528,22 +528,6 @@
             animation: pulse 1s infinite;
         }
         
-        .combo-break-effect {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 107, 139, 0.9);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 24px;
-            font-weight: bold;
-            z-index: 10;
-            display: none;
-            animation: pulse 1s infinite;
-        }
-        
         @keyframes pulse {
             0% { transform: translate(-50%, -50%) scale(1); }
             50% { transform: translate(-50%, -50%) scale(1.1); }
@@ -620,7 +604,6 @@
             
             <div class="bomb-warning" id="bombWarning">⚠️ 炸彈！扣1000分！ ⚠️</div>
             <div class="bomb-immunity-effect" id="bombImmunityEffect">🛡️ 炸彈免疫！剩餘次數 🛡️</div>
-            <div class="combo-break-effect" id="comboBreakEffect">💔 連擊中斷！扣分！ 💔</div>
             
             <!-- 技能選擇界面 - 只顯示3個隨機技能 -->
             <div class="skill-selection" id="skillSelection">
@@ -654,7 +637,7 @@
                 <p style="margin-top: 10px; color: #666; font-size: 14px; line-height: 1.5;">
                     1. 每個水果+10分<br>
                     2. 炸彈扣1000分 (分數≥60分出現)<br>
-                    3. 連擊規則：只要不扣分就算連擊！<br>
+                    3. 連擊定義：沒有水果掉出<br>
                     4. 炸彈免疫技能可擋3次<br>
                     5. 1000分獎勵：10秒加速模式
                 </p>
@@ -671,7 +654,7 @@
             </div>
             <div class="rule-item">
                 <h4>連擊系統</h4>
-                <p>只要不扣分，就算連擊！切水果、炸彈免疫時都會增加連擊。扣分時（水果掉出、切到炸彈）連擊重置。</p>
+                <p>只要沒有水果掉出螢幕（未切割而掉落），連擊就會持續累積。切到炸彈不會中斷連擊！</p>
             </div>
             <div class="rule-item">
                 <h4>1000分獎勵</h4>
@@ -679,7 +662,7 @@
             </div>
             <div class="rule-item">
                 <h4>炸彈免疫技能</h4>
-                <p>選擇炸彈免疫技能後，可以抵擋3次炸彈攻擊，使用後次數會減少。免疫時不會扣分，連擊繼續！</p>
+                <p>選擇炸彈免疫技能後，可以抵擋3次炸彈攻擊，使用後次數會減少。</p>
             </div>
         </div>
     </div>
@@ -703,7 +686,6 @@
         let selectSkillBtn = document.getElementById('selectSkillBtn');
         let bombWarning = document.getElementById('bombWarning');
         let bombImmunityEffect = document.getElementById('bombImmunityEffect');
-        let comboBreakEffect = document.getElementById('comboBreakEffect');
         let score1000Badge = document.getElementById('score1000Badge');
         let score1000Timer = document.getElementById('score1000Timer');
         let activeSkillsElement = document.getElementById('activeSkills');
@@ -721,7 +703,8 @@
         let game = {
             score: 0,
             timeLeft: 60,
-            originalTimeLeft: 60, // 記錄原始時間（用於難度計算）
+            // 新增：記錄實際經過的時間（從0開始，不受時間延長影響）
+            elapsedSeconds: 0,
             isRunning: false,
             fruits: [],
             bombs: [],
@@ -747,7 +730,8 @@
             selectedSkill: null,
             bombImmunityCharges: 0,
             consecutiveCuts: 0,
-            maxConsecutiveCuts: 0
+            maxConsecutiveCuts: 0,
+            missedSinceLastCut: false // 標記是否有水果掉出，用於連擊判斷
         };
         
         // 技能定義
@@ -877,7 +861,7 @@
                     this.slicedTime++;
                 }
                 
-                // 如果水果掉出屏幕且沒有被切割 → 扣分 → 連擊重置
+                // 如果水果掉出屏幕且沒有被切割，扣分並標記掉出
                 if (!this.isSliced && this.y > canvas.height + this.radius && !this.hasScored) {
                     this.hasScored = true;
                     
@@ -887,8 +871,8 @@
                     game.missedFruits++;
                     missedCounterElement.textContent = `掉出: ${game.missedFruits}`;
                     
-                    // 扣分 → 連擊重置
-                    resetCombo(true);
+                    // 只要有水果掉出，就標記為中斷連擊
+                    game.missedSinceLastCut = true;
                     
                     // 檢查是否負分
                     if (game.score < 0 && game.isRunning) {
@@ -986,8 +970,41 @@
                         activateScore1000Bonus();
                     }
                     
-                    // 切到水果 → 加分 → 連擊增加
-                    increaseCombo();
+                    // 連擊計算 - 根據是否曾有水果掉出來決定
+                    const currentTime = Date.now();
+                    
+                    // 如果沒有水果掉出，才增加連擊
+                    if (!game.missedSinceLastCut && currentTime - game.lastCutTime < 1000) {
+                        game.combo = Math.min(10, game.combo + 1);
+                        game.consecutiveCuts++;
+                        
+                        if (game.consecutiveCuts >= 8) {
+                            if (game.selectedSkill && game.selectedSkill.effect === "comboMaster") {
+                                triggerComboMaster();
+                            }
+                        }
+                    } else {
+                        // 有水果掉出，重置連擊
+                        game.combo = 1;
+                        game.consecutiveCuts = 1;
+                        // 重置掉出標記
+                        game.missedSinceLastCut = false;
+                    }
+                    
+                    game.lastCutTime = currentTime;
+                    
+                    comboElement.textContent = `x${game.combo}`;
+                    
+                    if (game.comboTimeout) clearTimeout(game.comboTimeout);
+                    
+                    const comboDuration = (game.selectedSkill && game.selectedSkill.effect === "longerCombo") ? 3000 : 1500;
+                    game.comboTimeout = setTimeout(() => {
+                        game.combo = 1;
+                        comboElement.textContent = 'x1';
+                        game.consecutiveCuts = 0;
+                        // 計時器結束時也重置掉出標記
+                        game.missedSinceLastCut = false;
+                    }, comboDuration);
                     
                     return true;
                 }
@@ -1096,7 +1113,6 @@
                     this.isExploded = true;
                     
                     if (game.bombImmunityCharges > 0) {
-                        // 有免疫 → 不扣分 → 連擊增加
                         game.bombImmunityCharges--;
                         
                         bombImmunityEffect.innerHTML = `🛡️ 炸彈免疫！剩餘 ${game.bombImmunityCharges}/3 次 🛡️`;
@@ -1107,13 +1123,9 @@
                         
                         updateActiveSkillsDisplay();
                         
-                        // 免疫成功 → 不扣分 → 連擊增加
-                        increaseCombo();
-                        
                         return true;
                     }
                     
-                    // 沒有免疫 → 扣1000分 → 連擊重置
                     const oldScore = game.score;
                     game.score -= 1000;
                     scoreElement.textContent = game.score;
@@ -1123,12 +1135,11 @@
                         bombWarning.style.display = 'none';
                     }, 2000);
                     
-                    // 扣分 → 連擊重置
-                    resetCombo(true);
-                    
                     if (game.score < 0 && game.isRunning) {
                         endGame(false);
                     }
+                    
+                    // 切到炸彈不影響連擊，也不標記掉出
                     
                     return true;
                 }
@@ -1136,67 +1147,20 @@
             }
         }
         
-        // 增加連擊的函數
-        function increaseCombo() {
-            const currentTime = Date.now();
-            
-            // 如果在連擊時間範圍內，增加連擊
-            if (currentTime - game.lastCutTime < 1000) {
-                game.combo = Math.min(10, game.combo + 1);
-                game.consecutiveCuts++;
-                
-                if (game.consecutiveCuts >= 8) {
-                    if (game.selectedSkill && game.selectedSkill.effect === "comboMaster") {
-                        triggerComboMaster();
-                    }
-                }
-            } else {
-                game.combo = 1;
-                game.consecutiveCuts = 1;
-            }
-            
-            game.lastCutTime = currentTime;
-            
-            comboElement.textContent = `x${game.combo}`;
-            
-            if (game.comboTimeout) clearTimeout(game.comboTimeout);
-            
-            const comboDuration = (game.selectedSkill && game.selectedSkill.effect === "longerCombo") ? 3000 : 1500;
-            game.comboTimeout = setTimeout(() => {
-                game.combo = 1;
-                comboElement.textContent = 'x1';
-                game.consecutiveCuts = 0;
-            }, comboDuration);
-        }
-        
-        // 重置連擊的函數（當扣分時呼叫）
-        function resetCombo(showEffect) {
-            game.combo = 1;
-            game.consecutiveCuts = 0;
-            comboElement.textContent = 'x1';
-            
-            if (game.comboTimeout) {
-                clearTimeout(game.comboTimeout);
-            }
-            
-            if (showEffect) {
-                comboBreakEffect.style.display = 'block';
-                setTimeout(() => {
-                    comboBreakEffect.style.display = 'none';
-                }, 1000);
-            }
-        }
-        
-        // 觸發1000分獎勵
+        // 觸發1000分獎勵 - 限時10秒，只顯示上方提示
         function activateScore1000Bonus() {
             game.score1000Reached = true;
             game.bonusModeActive = true;
             game.bonusTimeLeft = 10;
             
+            // 顯示上方獎勵標誌
             score1000Badge.style.display = 'block';
+            
+            // 顯示計時器
             score1000Timer.style.display = 'block';
             score1000Timer.innerHTML = `⏱️ 加速剩餘: 10秒`;
             
+            // 立即生成一個獎勵水果
             if (game.isRunning) {
                 game.fruits.push(new Fruit());
                 fruitCountElement.textContent = `水果: ${game.fruits.length}`;
@@ -1362,7 +1326,7 @@
         function initGame() {
             game.score = 0;
             game.timeLeft = 60;
-            game.originalTimeLeft = 60; // 重置原始時間
+            game.elapsedSeconds = 0; // 重置經過秒數
             game.isRunning = false;
             game.fruits = [];
             game.bombs = [];
@@ -1381,6 +1345,7 @@
             game.bombImmunityCharges = 0;
             game.consecutiveCuts = 0;
             game.maxConsecutiveCuts = 0;
+            game.missedSinceLastCut = false;
             
             scoreElement.textContent = '0';
             timeElement.textContent = '時間: 60秒';
@@ -1423,12 +1388,15 @@
             
             game.timerId = setInterval(() => {
                 game.timeLeft--;
+                // 實際經過秒數不受時間延長影響，永遠從0開始往上加
+                game.elapsedSeconds++;
+                
                 timeElement.textContent = `時間: ${game.timeLeft}秒`;
                 
-                // 使用原始時間來計算難度（確保時間延長後難度不會突然暴增）
-                const elapsedTime = 60 - game.originalTimeLeft;
+                // 修正：使用 game.elapsedSeconds 來計算難度，不受時間延長影響
                 if (game.fruitInterval > game.minInterval) {
-                    game.fruitInterval = Math.max(game.minInterval, 2000 - elapsedTime * 25);
+                    // 隨著實際經過時間，水果生成間隔越來越短
+                    game.fruitInterval = Math.max(game.minInterval, 2000 - game.elapsedSeconds * 20);
                 }
                 
                 if (game.timeLeft <= 0) {
@@ -1446,7 +1414,7 @@
             if (game.selectedSkill && game.selectedSkill.effect === "extraTime") {
                 game.timeLeft += 15;
                 timeElement.textContent = `時間: ${game.timeLeft}秒`;
-                // 不修改 originalTimeLeft，讓難度計算使用原始的60秒
+                // 不修改 elapsedSeconds，讓難度計算不受影響
             }
             
             if (game.selectedSkill && game.selectedSkill.effect === "bombImmunity") {
@@ -1494,9 +1462,10 @@
             if (game.isRunning) {
                 const currentTime = Date.now();
                 if (currentTime - game.lastFruitTime > game.fruitInterval) {
-                    // 使用原始時間來計算水果數量（確保時間延長後不會一次出太多水果）
-                    const baseCount = Math.floor((60 - game.originalTimeLeft) / 20) + 1;
-                    const fruitCount = Math.min(4, baseCount);
+                    // 修正：使用 game.elapsedSeconds 來計算水果數量，不受時間延長影響
+                    // 每5秒增加一個水果，讓玩家能在35秒左右達到1000分
+                    const baseCount = Math.floor(game.elapsedSeconds / 5) + 1;
+                    const fruitCount = Math.min(5, baseCount); // 最多5個
                     
                     for (let i = 0; i < fruitCount; i++) {
                         setTimeout(() => {
